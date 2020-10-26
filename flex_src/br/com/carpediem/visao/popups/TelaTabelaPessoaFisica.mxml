@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx" width="728" height="316" creationComplete="init(event)" close="PopUpManager.removePopUp(this)">
+	<fx:Script>
+		<![CDATA[
+			import br.com.carpediem.controle.DataBind;
+			
+			import mx.managers.PopUpManager;
+			
+			import br.com.carpediem.controle.events.OKEvent;
+			import br.com.carpediem.modelo.PessoaFisica;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+
+			[Bindable]
+			public var al:ArrayCollection;
+			
+			protected function init(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				remoteObject.listaPessoaFisica();
+			}
+			
+			protected function resultado(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				al = event.result as ArrayCollection;
+			}
+			
+			protected function falha(event:FaultEvent):void
+			{
+				// TODO Auto-generated method stub
+				Alert.show("- Falha no BlazeDS\n" + event.fault.faultString);
+			}
+			
+			protected function selecionaPessoa(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				DataBind.instance().pessoaFisicaPopUp = tabelaPessoaFisica.dataProvider.getItemAt(tabelaPessoaFisica.selectedIndex) as PessoaFisica;
+				this.dispatchEvent( new OKEvent (OKEvent.OK));
+				PopUpManager.removePopUp(this);
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<s:RemoteObject id="remoteObject" destination="FlexRemoto" fault="falha(event)">
+			<s:method name="listaPessoaFisica" result="resultado(event)" fault="falha(event)"/>
+		</s:RemoteObject>
+	</fx:Declarations>
+	<s:DataGrid id="tabelaPessoaFisica" x="10" y="10" width="706" height="234"
+				doubleClick= "selecionaPessoa(event)" requestedRowCount="4" dataProvider="{al}">
+		<s:columns>
+			<s:ArrayList>
+				<s:GridColumn dataField="codigoPessoaFisica" headerText="Código" sortable="false"></s:GridColumn>
+				<s:GridColumn dataField="nome" headerText="Nome" sortable="false"></s:GridColumn>
+				<s:GridColumn dataField="sobrenome" headerText="Sobrenome" sortable="false"></s:GridColumn>
+				<s:GridColumn dataField="cpf" headerText="CPF" sortable="false"></s:GridColumn>
+				<s:GridColumn dataField="rg" headerText="RG" sortable="false"></s:GridColumn>
+				<s:GridColumn dataField="sexo" headerText="Sexo" sortable="false"></s:GridColumn>
+				<s:GridColumn dataField="estadoCivil" headerText="Estado Civil" sortable="false"></s:GridColumn>
+				<s:GridColumn dataField="dataNascimento" headerText="Nascimento" sortable="false"></s:GridColumn>
+			</s:ArrayList>
+		</s:columns>
+	</s:DataGrid>
+	<s:Button x="587" y="252" label="Selecionar Pessoa" click="selecionaPessoa(event)"/>
+</s:TitleWindow>

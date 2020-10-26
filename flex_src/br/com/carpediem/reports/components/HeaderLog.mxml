@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<print:PrintComponent xmlns:fx="http://ns.adobe.com/mxml/2009"
+					  xmlns:s="library://ns.adobe.com/flex/spark"
+					  xmlns:mx="library://ns.adobe.com/flex/mx"
+					  xmlns:print="org.print.*"
+					  width="100%" height="72">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<mx:DateFormatter id="dateFormat" formatString="DD/MM/YYYY"/>
+		
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			
+			[Bindable]
+			public var sala:String = "";
+		]]>
+	</fx:Script>
+	<s:Image x="0" y="0" width="100%" height="72" scaleMode="stretch"
+			 source="@Embed('../../assets/images/blankpage.png')"/>
+	<s:Image x="6" y="0" width="150" height="72" source="@Embed('../../assets/images/tree1.png')"/>
+	<s:Label y="10" color="#020202" fontFamily="Verdana" fontSize="12" fontStyle="normal"
+			 fontWeight="bold" horizontalCenter="-4" text="LOG DO CHAT DA SALA {sala}"/>
+	<mx:HRule y="45" left="24" right="23" height="8"/>
+	<s:Label y="22" right="10" color="#000000" fontFamily="Times New Roman" fontStyle="normal"
+			 fontWeight="bold" text="Sistema Carpe Diem"/>
+	
+</print:PrintComponent>

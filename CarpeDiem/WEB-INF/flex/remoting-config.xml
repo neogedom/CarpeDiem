@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service id="remoting-service" 
+    class="flex.messaging.services.RemotingService">
+
+    <adapters>
+        <adapter-definition id="java-object" class="flex.messaging.services.remoting.adapters.JavaAdapter" default="true"/>
+    </adapters>
+
+    <default-channels>
+        <channel ref="my-amf"/>
+    </default-channels>
+    
+        <destination id="FlexRemoto">
+    	<properties>
+    		<source>br.com.carpediem.controle.FlexRemoto </source>
+    	</properties>
+    </destination>
+    
+    <destination id="DAO">
+    	<properties>
+    		<source>br.com.carpediem.dao.DAO </source>
+    	</properties>
+    </destination>
+    
+    <destination id="Professor">
+    	<properties>
+    		<source>br.com.carpediem.modelo.Professor </source>
+    	</properties>
+    </destination>
+    
+    <destination id="PessoaFisica">
+    	<properties>
+    		<source>br.com.carpediem.modelo.PessoaFisica </source>
+    	</properties>
+    </destination>
+    
+    <destination id="Pessoa">
+    	<properties>
+    		<source>br.com.carpediem.modelo.Pessoa </source>
+    	</properties>
+    </destination>
+
+</service>

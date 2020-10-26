@@ -1,0 +1,16 @@
+/* CSS file */
+@namespace s "library://ns.adobe.com/flex/spark";
+@namespace mx "library://ns.adobe.com/flex/mx";
+@namespace print "org.print.*";
+
+
+.title
+{
+	fontWeight: bold;
+	fontSize: 40;
+}
+print|Report
+{
+	color: #FAF5F5;
+}
+	

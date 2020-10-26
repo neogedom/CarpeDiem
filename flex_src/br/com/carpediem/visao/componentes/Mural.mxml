@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:componente="com.flexpernambuco.controls.*"
+		 width="1044" height="504" title="Mural" creationComplete="init(event)">
+	<fx:Script>
+		<![CDATA[
+			import br.com.carpediem.controle.DataBind;
+			import br.com.carpediem.controle.events.OKEvent;
+			import br.com.carpediem.controle.Navegacao;
+			import br.com.carpediem.modelo.Aluno;
+			import br.com.carpediem.modelo.Aviso;
+			import br.com.carpediem.modelo.Boletim;
+			import br.com.carpediem.modelo.Curso;
+			import br.com.carpediem.modelo.Disciplina;
+			import br.com.carpediem.modelo.Professor;
+			import br.com.carpediem.modelo.Turma;
+			import br.com.carpediem.visao.popups.TelaDetalhe;
+			import br.com.carpediem.visao.popups.TelaNovoAviso;
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.DataGridEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			import spark.events.IndexChangeEvent;
+			
+			[Bindable]
+			public var al:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alturma:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alturmacod:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alaviso:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alprofessorsobrenome:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var aldisciplina:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var rowNumber:int;
+			
+			protected function init(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				remoteObject.listaAvisos();
+				if (DataBind.instance().usuarioAtual.pessoaFisica.nivelAcesso == 3)
+				{
+					botaoAviso.enabled = false;
+				}
+			}
+			
+
+			protected function falha(event:FaultEvent):void
+			{
+				// TODO Auto-generated method stub
+				Alert.show("- Erro no BlazeDS\n" + event.fault.faultString);
+			}
+			
+			
+			protected function verificaLinhaEditavel(event:DataGridEvent):void
+			{
+				// TODO Auto-generated method stub
+				if (event.rowIndex != rowNumber)
+				{
+					event.preventDefault();
+				}
+			}
+			
+			public function editarDados():void
+			{
+				tabelaAviso.editable = true;
+				rowNumber = tabelaAviso.selectedIndex;
+				DataBind.instance().tabelaDetalheEditavel = true;
+				
+			}
+			
+			public function cancelarEdicao():void
+			{
+				tabelaAviso.editable = false;
+				DataBind.instance().tabelaDetalheEditavel = false;
+				alaviso.removeAll();
+				remoteObject.listaAvisos();
+				Alert.show("A edição para esta tabela foi cancelada!");
+			}
+			
+			public function salvarDados():void
+			{
+				var aviso:Aviso = new Aviso();
+				var turma:Turma = new Turma();
+				
+				
+				aviso.codigoAviso = tabelaAviso.selectedItem.codigoAviso;
+				aviso.descricao = tabelaAviso.selectedItem.descricao;
+				turma.codigoTurma = tabelaAviso.selectedItem.turma.codigoTurma;
+				aviso.turma = turma;
+				aviso.ativo = true;
+				remoteObject.alteraAviso(aviso);
+				tabelaAviso.editable = false;
+			}
+			
+			public function selecionaDetalhe():void
+			{
+				DataBind.instance().detalheSelecionado = (alaviso.getItemAt(tabelaAviso.selectedIndex) as Aviso).descricao;
+				DataBind.instance().turmaAvisoSelecinada =  (alturma.getItemAt(tabelaAviso.selectedIndex) as Turma);
+			}
+			
+			public function atualizaDados():void
+			{
+				tabelaAviso.selectedItem.descricao = DataBind.instance().avisoDetalhe;
+				tabelaAviso.selectedItem.turma.disciplina.nome = DataBind.instance().turmaAvisoSelecinada.disciplina.nome;
+				tabelaAviso.selectedItem.turma.professor.nome = DataBind.instance().turmaAvisoSelecinada.professor.nome;
+				tabelaAviso.selectedItem.turma.codigoTurma= DataBind.instance().turmaAvisoSelecinada.codigoTurma;
+				
+			}
+			
+			protected function resultadoCadastro(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				Alert.show("Dados salvos com sucesso!");
+			}
+			
+			protected function acessaTelaInicial(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				Navegacao.instance().AcessaTelaInicial();
+			}
+			
+			protected function resultado(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var cont:int;
+				var aviso:Aviso;
+				alaviso.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; al.length; cont++)
+				{
+					aviso = al.getItemAt(cont) as Aviso;
+					alaviso.addItem(aviso);
+					alturma.addItem(aviso.turma);
+				}
+			}
+			
+			protected function tabelaConsulta_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				DataBind.instance().avisoDetalhe = tabelaAviso.selectedItem.descricao;
+					
+			}
+			
+			protected function resultadoUpdate(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				Alert.show("Dados salvos com sucesso!","Atenção");
+			}
+			
+			protected function abreTelaNovoAviso(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				var painel:TelaNovoAviso = TelaNovoAviso(PopUpManager.createPopUp(DisplayObject(this.parentApplication), TelaNovoAviso, true));
+				painel.addEventListener(OKEvent.OK, onPopUpClose, false, 0, true);
+				PopUpManager.centerPopUp(painel);
+			}
+			
+			private function onPopUpClose(evento:OKEvent):void
+			{
+				remoteObject.listaAvisos();
+			}
+			
+			protected function resultadoDelete(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				Alert.show("Dados removidos com sucesso!","Atenção");
+			}
+			
+			public function removerDados():void
+			{
+				var aviso:Aviso = new Aviso();
+				aviso.codigoAviso = (tabelaAviso.dataProvider.getItemAt(tabelaAviso.selectedIndex) as Aviso).codigoAviso;
+				remoteObject.deletaAviso(aviso);
+				alaviso.removeAll();
+				remoteObject.listaAvisos();
+			}
+			
+			protected function buscar(event:Event):void
+			{
+				if (campoConsultaAviso.text != "")
+				{
+					alaviso.removeAll();
+					remoteObject.buscaAviso(campoConsultaAviso.text);
+				}
+				else {
+					remoteObject.listaAvisos();
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<s:RemoteObject id="remoteObject" destination="FlexRemoto" fault="falha(event)">
+			<s:method name="listaAvisos" result="resultado(event)" fault="falha(event)" />
+			<s:method name="alteraAviso" result="resultadoUpdate(event)" fault="falha(event)" />
+			<s:method name="deletaAviso" result="resultadoDelete(event)" fault="falha(event)" />
+			<s:method name="buscaAviso" result="resultado(event)" fault="falha(event)" />
+		</s:RemoteObject>
+	</fx:Declarations>
+	<s:Button x="884" y="434" label="Voltar à Tela Inicial" click="acessaTelaInicial(event)"/>
+	<s:Button id="botaoAviso" x="28" y="438" label="Novo Aviso" click="abreTelaNovoAviso(event)"/>
+	<componente:MasterTextInput id="campoConsultaAviso" change="buscar(event)" x="15" y="25" width="1005"
+								restrict="a-z 0-9 \.\-\_\@\ª\º"/>
+	<s:Label x="15" y="6" color="#4C2600" text="Digite aqui o nome do professor, da disciplina ou do curso para pesquisar:"/>
+	<mx:DataGrid id="tabelaAviso" click="tabelaConsulta_clickHandler(event)" x="21" y="70" width="990" height="360" color="#4C2600"
+				 fontFamily="Arial" variableRowHeight="true" dataProvider="{alaviso}">
+		<mx:columns>
+			<mx:DataGridColumn dataField="codigoAviso" headerText="Codigo"
+							   sortable="false" editable="false"/>
+			<mx:DataGridColumn dataField="turma.professor.nome" headerText="Nome Professor"
+							   sortable="false"/>
+			<mx:DataGridColumn dataField="turma.professor.sobrenome" headerText="Sobrenome Professor" sortable="false"/>
+			<mx:DataGridColumn dataField="turma.disciplina.nome" headerText="Disciplina"
+							   sortable="false"/>
+		
+			<mx:DataGridColumn dataField="detalhes" editable="false"
+							   headerText="Detalhes"
+							   itemRenderer="br.com.carpediem.controle.renderers.DetalheButtonsRenderer"
+							   resizable="true" sortable="false"/>
+			<mx:DataGridColumn dataField="operacoes" headerText="Operações"
+							   itemRenderer="br.com.carpediem.controle.renderers.OperationsRenderer"
+							   sortable="false" editable="false"/>
+		</mx:columns>
+	</mx:DataGrid>
+</s:Panel>

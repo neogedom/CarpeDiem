@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx" width="354" height="310" close="PopUpManager.removePopUp(this)" creationComplete="init(event)" > 
+	
+	<fx:Script>
+		<![CDATA[
+			import br.com.carpediem.controle.DataBind;
+			import br.com.carpediem.modelo.Curso;
+			import br.com.carpediem.controle.events.OKEvent;
+			import br.com.carpediem.modelo.Endereco;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			[Bindable]
+			public var al:ArrayCollection;
+			
+			
+			protected function init(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				remoteObject.listaCursos();
+				
+			}
+			protected function selecionaEndereco(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				DataBind.instance().cursoPopUp = tabelaCurso.dataProvider.getItemAt(tabelaCurso.selectedIndex) as Curso;
+				this.dispatchEvent( new OKEvent (OKEvent.OK));
+				PopUpManager.removePopUp(this);
+			}
+			
+			public function resultado(evento:ResultEvent):void
+			{
+				al = evento.result as ArrayCollection;
+			}
+			
+			public function falha (evento:FaultEvent):void
+			{
+				Alert.show("- Falha no BlazeDS\n" + evento.fault.faultString);
+			}
+			
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<s:RemoteObject id="remoteObject" destination="FlexRemoto" fault="falha(event)">
+			<s:method name="listaCursos" result="resultado(event);" fault="falha(event)" />
+		</s:RemoteObject>
+	</fx:Declarations>
+	<s:DataGrid id="tabelaCurso" x="14" y="1" width="325" height="234"
+				doubleClick= "selecionaEndereco(event)" requestedRowCount="4" dataProvider="{al}">
+		<s:columns>
+			<s:ArrayList>
+				<s:GridColumn dataField="codigoCurso" headerText="Código" resizable="true"
+							  sortable="false"></s:GridColumn>
+				<s:GridColumn dataField="nome" headerText="Nome" resizable="true" sortable="false"></s:GridColumn>
+			</s:ArrayList>
+		</s:columns>
+	</s:DataGrid>
+	<s:Button x="227" y="243" label="Selecionar Curso" click="selecionaEndereco(event)"/>
+</s:TitleWindow>

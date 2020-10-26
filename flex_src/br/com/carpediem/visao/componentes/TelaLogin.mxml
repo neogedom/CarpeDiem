@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Panel width="293" height="166" borderVisible="true" fontWeight="bold"
+		 horizontalCenter="0" title="Faça seu login" verticalCenter="0"
+		xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" creationComplete="dataAtual()">
+	<fx:Script>
+		<![CDATA[
+			import br.com.carpediem.controle.DataBind;
+			import br.com.carpediem.controle.Navegacao;
+			import br.com.carpediem.modelo.Usuario;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.managers.CursorManager;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			import flash.events.TimerEvent;
+			import flash.utils.Timer;
+			
+			private var timer:Timer;
+			
+			[Bindable]
+			public var hora:String;
+			[Bindable]
+			public var data:Date = new Date();
+			
+			public function Login():void
+			{
+				CursorManager.setBusyCursor();
+				remoteObject.getUsuario(campoLogin.text);
+			}
+			
+			private function resultadoUsuario (e:ResultEvent):void{
+				var data:Date = new Date();
+				var sexo:String;
+				var usuario:Usuario = e.result as Usuario;
+				if (usuario.usuario == campoLogin.text && usuario.senha == campoSenha.text)
+				{
+						DataBind.instance().usuarioAtual = usuario;
+						
+						if (usuario.pessoaFisica.sexo == "MASCULINO")
+						{
+							sexo = "o";
+						}
+						else
+						{
+							sexo = "a";
+						}
+							
+						DataBind.instance().boasVindas = "Seja bem vind" + sexo + " ao Sistema CarpeDiem, " + DataBind.instance().usuarioAtual.pessoaFisica.nome + ". ";
+						DataBind.instance().boasVindasData =  dataAtual();
+						DataBind.instance().nivelAcesso = usuario.pessoaFisica.nivelAcesso;
+						CursorManager.removeBusyCursor();
+						Navegacao.instance().AcessaTelaInicial();
+						
+					}
+					else if (usuario == null) {
+						CursorManager.removeBusyCursor();
+						Alert.show("Usuário ou senha incorretos!","Atenção");
+					}
+					
+				}
+			
+			public function dataAtual():String
+			{
+				var data:String;
+				var dataF:Date = new Date();
+				
+				
+				data = "Hoje é " + dataF.getDate().toString() +' de '+
+					retornaMes(dataF.getMonth())+' de '+
+					dataF.getFullYear().toString()+' – '+
+					retornaDiaSemana(dataF.getDay());
+				
+				return data;
+			}
+
+						
+			// FUNÇÃO QUE RETORNA O MÊS
+			public function retornaMes(mes:int):String{
+				
+				var mesR:String;
+				var soma:int;
+				
+				soma = mes+1;
+				
+				switch(soma){
+					case 1:
+						mesR = 'Janeiro';
+						break;
+					case 2:
+						mesR = 'Fevereiro';
+						break;
+					case 3:
+						mesR = 'Março';
+						break;
+					case 4:
+						mesR = 'Abril';
+						break;
+					case 5:
+						mesR = 'Maio';
+						break;
+					case 6:
+						mesR = 'Junho';
+						break;
+					case 7:
+						mesR = 'Julho';
+						break;
+					case 8:
+						mesR = 'Agosto';
+						break;
+					case 9:
+						mesR = 'Setembro';
+						break;
+					case 10:
+						mesR = 'Outubro';
+						break;
+					case 11:
+						mesR = 'Novembro';
+						break;
+					case 12:
+						mesR = 'Dezembro';
+						break;
+				}
+				
+				
+				
+				return mesR;
+				
+			}
+			
+			public function retornaDiaSemana(dia:int):String{
+				
+				var descricaoDia:String;
+				
+				switch(dia){
+					case 0:
+						descricaoDia = 'Domingo';
+						break;
+					case 1:
+						descricaoDia = 'Segunda-feira';
+						break;
+					case 2:
+						descricaoDia = 'Terça-feira';
+						break;
+					case 3:
+						descricaoDia = 'Quarta-feira';
+						break;
+					case 4:
+						descricaoDia = 'Quinta-feira';
+						break;
+					case 5:
+						descricaoDia = 'Sexta-feira';
+						break;
+					case 6:
+						descricaoDia = 'Sábado';
+						break;
+				}
+				return descricaoDia;
+				
+			}
+			
+				
+			private function falha (e:FaultEvent):void{
+				CursorManager.removeBusyCursor();
+				Alert.show("Usuário ou senha incorretos!", "Falha de login");
+			}
+			
+			private function falhaUsuario (e:FaultEvent):void{
+				CursorManager.removeBusyCursor();
+				Alert.show("Usuário ou senha incorretos!", "Falha de login");
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<s:RemoteObject id="remoteObject" destination="FlexRemoto" fault="falha(event)">
+			 <s:method name="getUsuario" result="resultadoUsuario(event);" fault="falhaUsuario(event)" />
+		 </s:RemoteObject>
+	</fx:Declarations>
+		<s:TextInput id="campoLogin" x="80" y="9" width="181" text="masteruser" enter="Login()"/>
+		<s:TextInput id="campoSenha" x="80" y="56" width="181" displayAsPassword="true"
+					 text="12345" enter="Login()"/>
+		<s:Label x="10" y="66" text="Senha:"/>
+		<s:Label x="10" y="19" text="Usuário:"/>
+		<s:Button x="11" y="100" label="Entrar" click="Login()"/>
+</s:Panel>

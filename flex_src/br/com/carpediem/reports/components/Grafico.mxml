@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:fx="http://ns.adobe.com/mxml/2009"
+		   xmlns:s="library://ns.adobe.com/flex/spark"
+		   xmlns:mx="library://ns.adobe.com/flex/mx"
+		   width="498" color="#0C0C0C" initialize="init(event)">
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.events.FlexEvent;
+			
+			[Bindable]
+			public var chartData:ArrayCollection = new ArrayCollection();
+			
+			protected function init(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				this.grafico.dataProvider = this.chartData;
+				this.eixoCategoria.dataProvider = this.chartData;
+				//this.legenda.dataProvider = this.dataProvider;
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<mx:ColumnChart id="grafico" x="33" y="-45" width="351" height="327">
+		
+	
+	<mx:horizontalAxis>
+		<mx:CategoryAxis id = "eixoCategoria" categoryField="nome" />
+	</mx:horizontalAxis>
+	
+	<mx:series>
+		<mx:ColumnSeries
+			xField="nome" 
+			yField="VA1"
+			displayName="VA1"
+			/>
+	
+	<mx:ColumnSeries 
+		xField="nome" 
+		yField="VA2"
+		displayName="VA2"
+		/>
+	
+	
+	<mx:ColumnSeries 
+		xField="nome" 
+		yField="VA3"
+		displayName="VA3"
+		/>
+	
+	
+	<mx:ColumnSeries 
+		xField="nome" 
+		yField="VA4"
+		displayName="VA4"
+		/>
+	
+	
+	<mx:ColumnSeries 
+		xField="nome" 
+		yField="VA5"
+		displayName="VA5"
+		/>
+	</mx:series>
+	</mx:ColumnChart>
+	<mx:Legend x="34" y="290" dataProvider="{grafico}"/>
+</mx:Canvas>
+

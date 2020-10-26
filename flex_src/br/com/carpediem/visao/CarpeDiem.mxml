@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   xmlns:componentes="br.com.carpediem.visao.componentes.*"
+			   xmlns:local="*"
+			   xmlns:componente="com.flexpernambuco.controls.*"
+			   minWidth="955" minHeight="600" currentState="{States.instance().currState}"
+			   pageTitle="Carpe Diem - Escola Virtual"
+			   width.Login="100%" height.Login="100%" backgroundColor.Login="#FBF9F9"
+			   preloaderChromeColor.Login="#7486F2"
+			   width.Mural="100%" height.Mural="100%" backgroundColor.Mural="#FBF9F9"
+			   preloaderChromeColor.Mural="#7486F2"
+			   width.QuadroDeNotas="100%" height.QuadroDeNotas="100%"
+			   backgroundColor.QuadroDeNotas="#FBF9F9" preloaderChromeColor.QuadroDeNotas="#7486F2"
+			   width.SalaVirtual="1369"
+			   width.TelaControle="100%" height.TelaControle="100%"
+			   width.TelaInicial="100%" height.TelaInicial="100%"
+			   backgroundColor.TelaInicial="#030303">
+	<fx:Style source="/br/com/carpediem/controle/css/estilo.css"/>
+	<fx:Style source="CarpeDiem_1.css"/>
+	<s:states>
+		<s:State name="Login"/>
+		<s:State name="TelaInicial"/>
+		<s:State name="TelaControle"/>
+		<s:State name="QuadroDeNotas"/>
+		<s:State name = "SalaVirtual"/>
+		<s:State name="Mural"/>
+	</s:states>
+	<fx:Script >
+		<![CDATA[
+			import br.com.carpediem.controle.DataBind;
+			import br.com.carpediem.visao.popups.TelaRelatorio;
+			import br.com.carpediem.controle.Navegacao;
+			import br.com.carpediem.controle.States;
+			import br.com.carpediem.controle.events.OKEvent;
+			import br.com.carpediem.visao.componentes.SalaVirtual;
+			import br.com.carpediem.visao.popups.TelaChamada;
+			import br.com.carpediem.visao.popups.TelaConfigurarIP;
+			import br.com.carpediem.visao.popups.TelaCriarSala;
+			
+			import mx.controls.Alert;
+			import mx.core.IVisualElementContainer;
+			import mx.core.UIComponent;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+
+		
+			
+		
+			protected function acessaTelaInicial(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				Navegacao.instance().AcessaTelaInicial();
+				
+			}
+			
+			public function AtribuirIP ():void
+			{
+				var painel:TelaConfigurarIP = TelaConfigurarIP(PopUpManager.createPopUp(this, TelaConfigurarIP, true));
+				PopUpManager.centerPopUp(painel);
+			}
+			
+			
+			protected function verificaNivelAcesso(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				if (DataBind.instance().usuarioAtual.pessoaFisica.nivelAcesso != 1)
+				{
+					
+					botaoAtribuirIP.visible = false;
+				}
+			}
+			
+			public function abreJanelaRelatorios():void
+			{
+				var painel:TelaRelatorio = TelaRelatorio(PopUpManager.createPopUp(this, TelaRelatorio, true));
+				PopUpManager.centerPopUp(painel);
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<s:RadioButtonGroup id="radiogroup1"/>
+		<s:RadioButtonGroup id="radiogroup2"/>
+		<s:RadioButtonGroup id="radiogroup3"/>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:controlBarContent.Login>
+		<fx:Array></fx:Array>
+	</s:controlBarContent.Login>
+	<s:controlBarContent.TelaControle>
+		<fx:Array>
+		</fx:Array>
+	</s:controlBarContent.TelaControle>
+	<s:controlBarContent.TelaInicial>
+		<fx:Array></fx:Array>
+	</s:controlBarContent.TelaInicial>
+	<s:controlBarContent.QuadroDeNotas>
+		<fx:Array></fx:Array>
+	</s:controlBarContent.QuadroDeNotas>
+	<s:layout.SalaVirtual>
+		<s:BasicLayout/>
+	</s:layout.SalaVirtual>
+	<s:controlBarContent.Mural>
+		<fx:Array></fx:Array>
+	</s:controlBarContent.Mural>
+	
+	<s:Image includeIn="Login,Mural" x="0" y="2" width="100%" height="582"
+			 source="@Embed('/br/com/carpediem/assets/images/fundo1.jpg')" scaleMode="stretch"/>
+	<componentes:TelaLogin includeIn="Login" x="267" y="112"/>
+	<componentes:TelaInicial includeIn="TelaInicial" />
+	<componentes:TelaControle includeIn="TelaControle" horizontalCenter="2"
+							  verticalCenter="21"/>
+	<componentes:QuadroNotas includeIn="QuadroDeNotas" x="236" y="0"/>
+	
+	<s:Label includeIn="Login" color="#4C2600" horizontalCenter="0" styleName="title"
+			 text="Sistema Carpe Diem" verticalCenter="-225"/>
+	<s:Label includeIn="Login" y="125" color="#4C2600" fontWeight="bold" horizontalCenter="0"
+			 styleName="title" text="Ambiente Virtual de Apoio Educacional&#xd;"/>
+	<s:Button includeIn="TelaControle" label="Voltar à Tela Inicial" click="acessaTelaInicial(event)"
+			  horizontalCenter="-469" verticalCenter="-281"/>
+	<s:Button includeIn="TelaControle" id="botaoAtribuirIP" creationComplete="verificaNivelAcesso(event)" label="Configurar IP " click="AtribuirIP()"
+			  horizontalCenter="399" verticalCenter="-284"/>
+	<s:Button id="botaoRelatorio" includeIn="TelaControle" label="Relatórios"
+			   click="abreJanelaRelatorios()" horizontalCenter="491" verticalCenter="-284"/>
+	<componentes:Mural includeIn="Mural" x="111" y="10">
+	</componentes:Mural>
+	
+		<s:layout>
+			<s:BasicLayout/>
+		</s:layout>
+</s:Application>

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+				xmlns:s="library://ns.adobe.com/flex/spark"
+				xmlns:mx="library://ns.adobe.com/flex/mx"
+				xmlns:controls="com.flexpernambuco.controls.*"
+				width="474" height="330" layout="absolute" showCloseButton="true" title="Detalhes" creationComplete="init(event)" close="PopUpManager.removePopUp(this)">
+	<fx:Script>
+		<![CDATA[
+			import br.com.carpediem.controle.DataBind;
+			import br.com.carpediem.modelo.Turma;
+			import br.com.carpediem.controle.events.OKEvent;
+			import br.com.carpediem.modelo.Aviso;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			[Bindable]
+			public var al:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alturma:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alturmacod:ArrayCollection = new ArrayCollection();
+			
+			
+			protected function init(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				remoteObject.listaTurmas();
+			}
+			
+			protected function concluir(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				
+				if (labelDetalhe.text == "" || comboTurma.selectedIndex == -1)
+				{
+					
+					Alert.show("Preencha todos os campos macardos com *. Eles são obrigatórios!","Atenção");
+				}
+				else {
+					var aviso:Aviso = new Aviso();
+					var turma:Turma = new Turma();
+						
+					aviso.descricao = labelDetalhe.text;
+					
+					turma.codigoTurma = comboTurma.selectedItem;
+					aviso.turma = turma;
+					
+					aviso.ativo = true;
+					
+					
+					remoteObject.cadastraAviso(aviso);
+				}
+			}
+				
+				
+			
+			
+			protected function resultado(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var cont:int;
+				var turma:Turma;
+				alturma.removeAll();
+				alturmacod.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; al.length; cont++)
+				{
+					
+					turma = al.getItemAt(cont) as Turma;
+					alturma.addItem(turma);
+					alturmacod.addItem(turma.codigoTurma);
+					
+					if (DataBind.instance().turmaAvisoSelecinada.codigoTurma.toString() == alturmacod.getItemAt(cont).toString())
+					{
+						comboTurma.selectedIndex = cont;
+					}
+					
+				}
+					
+	
+			}
+			
+			protected function falha(event:FaultEvent):void
+			{
+				// TODO Auto-generated method stub
+				Alert.show("- Erro no BlazeDS\n" + event.fault.faultString);
+			}
+			
+			protected function resultadoCadastro(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				Alert.show("Dados salvos com sucesso!");
+				PopUpManager.removePopUp(this);
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<s:RemoteObject id="remoteObject" destination="FlexRemoto" fault="falha(event)">
+			<s:method name="listaTurmas" result="resultado(event)" fault="falha(event)" />
+			<s:method name="cadastraAviso"  result="resultadoCadastro(event)" fault="falha(event)" />	
+		</s:RemoteObject>
+	</fx:Declarations>
+	<s:Button x="398" y="305" label="Concluir" id="botaoConcluir" click="concluir(event)"/>
+	<s:Label x="281" y="61" text="Turma:"/>
+	<s:ComboBox id="comboTurma" x="327" y="49" dataProvider="{alturmacod}" enabled="true"
+				selectedIndex="1"/>
+	<s:TextArea id="labelDetalhe" x="10" y="92" width="454" height="205" enabled="true" editable="true"/>
+	<s:Label x="10" y="72" text="Digite o aviso abaixo:"/>
+</mx:TitleWindow>

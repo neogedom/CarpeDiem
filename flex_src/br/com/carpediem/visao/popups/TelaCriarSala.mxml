@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   width="566" height="252" fontWeight="bold"
+			   close="PopUpManager.removePopUp(this)"
+			   creationComplete="init()"
+				>
+	<s:states>
+		<s:State name="semSenha"/>
+		<s:State name="comSenha"/>
+	</s:states>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<s:RemoteObject id="remoteObject" destination="FlexRemoto" fault="falha(event)">
+			<s:method name="listaProfessores" result="resultadoProfessor(event);" fault="falha(event)" />
+			<s:method name="listaDisciplinaProfessores" result="resultadoDisciplina(event);" fault="falha(event)" />
+			<s:method name="listaTurmaPorDisciplina"  result="resultadoTurma(event)" fault="falha(event)" />
+			<s:method name="gravaSalaBanco" result="resultadoSala(event);" fault="falha(event)" />
+		</s:RemoteObject>
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import br.com.carpediem.conexao.JAVARemoto;
+			import br.com.carpediem.conexao.RemoteDestination;
+			import br.com.carpediem.controle.DataBind;
+			import br.com.carpediem.controle.renderers.SalasItemRenderer;
+			import br.com.carpediem.modelo.Curso;
+			import br.com.carpediem.modelo.Disciplina;
+			import br.com.carpediem.modelo.PessoaFisica;
+			import br.com.carpediem.modelo.Professor;
+			import br.com.carpediem.modelo.Sala;
+			import br.com.carpediem.modelo.Turma;
+			import br.com.carpediem.visao.componentes.SalaVirtual;
+			import br.com.carpediem.visao.componentes.TelaInicial;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.core.Application;
+			import mx.events.CloseEvent;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			[Bindable]
+			public var nomes:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var sobrenomes:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var disciplinas:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var turmas:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alprofessor:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var aldisciplina:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alturma:ArrayCollection = new ArrayCollection();
+			
+			private function init ():void
+			{
+				nomes.removeAll();
+				remoteObject.listaProfessores();
+				if (DataBind.instance().nivelAcesso != 1) {
+					nomeProfessor.enabled = false;
+				}
+			}
+			
+			public function carregaDisciplina():void
+			{
+				remoteObject.listaDisciplinaProfessores(nomeProfessor.selectedItem ,sobrenomes.getItemAt(nomeProfessor.selectedIndex));
+				
+			}
+			
+			public function resultadoProfessor (e:ResultEvent):void
+			{
+				var cont1:int;
+				var professor:Professor
+				alprofessor = e.result as ArrayCollection;
+				if (DataBind.instance().nivelAcesso == 1)
+				{
+					for (cont1 = 0; alprofessor.length; cont1++)
+					{
+					 	professor = Professor(alprofessor.getItemAt(cont1) as Professor);
+						sobrenomes.addItem(professor.sobrenome);
+						nomes.addItem(professor.nome);
+					}
+				}
+				else {
+					for (cont1 = 0; alprofessor.length; cont1++)
+					{
+						professor = Professor(alprofessor.getItemAt(cont1) as Professor);
+						if (professor.nome == DataBind.instance().usuarioAtual.pessoaFisica.nome)
+						{
+							nomes.addItem(professor.nome);
+							sobrenomes.addItem(professor.sobrenome);
+							nomeProfessor.selectedIndex = 0;
+							carregaDisciplina();
+						}
+					}
+				}
+			}
+			
+			public function resultadoDisciplina (e:ResultEvent):void
+			{
+				var cont1:int;
+				aldisciplina = e.result as ArrayCollection;
+				disciplinas.removeAll();
+				for (cont1 = 0; aldisciplina.length; cont1++)
+				{
+					var disciplina:Disciplina = Disciplina(aldisciplina.getItemAt(cont1) as Disciplina);
+					disciplinas.addItem(disciplina.nome);
+				}
+			}
+			
+			public function resultadoSala(e:ResultEvent):void
+			{
+				Alert.show("Sala criada com sucesso!");
+			}
+			
+			public function falha (e:FaultEvent):void
+			{
+				Alert.show("- Falha no BlazeDS\n" + e.fault.faultString);
+			}
+			
+			
+			
+			private function geraCampoSenha():void
+			{
+				if (checkBoxSenha.selected)
+				{	
+						currentState = "comSenha";
+				}
+				else
+				{
+						currentState = "semSenha";
+						campoSenha.text = "";
+				}
+			}
+			
+			private function criarSala():void
+			{
+				var sala:Sala = new Sala();
+				var disciplina:Disciplina = new Disciplina();
+				var disciplina2:Disciplina = new Disciplina();
+				var professor:Professor = new Professor();
+				var professor2:Professor = new Professor();
+				var turma:Turma = new Turma();
+				var turma2:Turma = new Turma();
+				
+				
+				professor2 = alprofessor.getItemAt(nomeProfessor.selectedIndex) as Professor;
+				professor.codigoProfessor = professor2.codigoProfessor;
+				professor.nome = nomeProfessor.selectedItem;
+					
+				disciplina2 = aldisciplina.getItemAt(nomeDisciplina.selectedIndex) as Disciplina;
+				disciplina.codigoDisciplina = disciplina2.codigoDisciplina;
+				disciplina.nome = nomeDisciplina.selectedItem;
+				
+				turma2 = alturma.getItemAt(numeroTurma.selectedIndex) as Turma;
+				turma.codigoTurma = turma2.codigoTurma;
+				turma.ano = numeroTurma.selectedItem;	
+		
+				sala.nome = nomeSala.text;
+				sala.disciplina = disciplina;
+				sala.professor = professor;
+				sala.comSenha = checkBoxSenha.selected;
+				sala.travada = checkBoxTrancada.selected;
+				sala.view = "ViewProfessor";
+				if (checkBoxSenha.selected){
+					sala.senha = campoSenha.text;
+				}
+				
+				sala.turma = turma;
+				
+				remoteObject.gravaSalaBanco(sala);
+				
+				TelaInicial.adicionaSala(sala);
+				this.dispatchEvent( new CloseEvent( CloseEvent.CLOSE));
+				PopUpManager.removePopUp(this);
+				
+			}
+			
+			private function carregaTurma():void
+			{
+				remoteObject.listaTurmaPorDisciplina(disciplinas.getItemAt(nomeDisciplina.selectedIndex) as String, nomes.getItemAt(nomeProfessor.selectedIndex) as String , sobrenomes.getItemAt(nomeProfessor.selectedIndex) as String);
+			}
+			
+			protected function resultadoTurma(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var cont1:int;
+				alturma = event.result as ArrayCollection;
+				turmas.removeAll();
+				for (cont1 = 0; aldisciplina.length; cont1++)
+				{
+					var turma:Turma = Turma(alturma.getItemAt(cont1) as Turma);
+					turmas.addItem(turma.ano);
+				}
+			}
+			
+		]]>
+	</fx:Script>
+
+	<s:TextInput x="26" y="46" width="507" id="nomeSala"/>
+	<s:Label x="26" y="26" text="Nome da Sala:&#xd;"/>
+	<s:Label x="26" y="80" text="Professor:"
+			 text.semSenha="Professor:"/>
+	<s:Label includeIn="semSenha" x="212" y="82" text="Disciplina:&#xd;"/>
+	<s:ComboBox id="nomeProfessor" includeIn="semSenha" x="26" y="100" width="174"
+				change="carregaDisciplina()" dataProvider="{nomes}"/>
+	<s:ComboBox id="nomeDisciplina" x="26" y="100" width="241" change="carregaTurma()"
+				dataProvider="{disciplinas}"
+				width.comSenha="174"
+				x.semSenha="212" y.semSenha="101" width.semSenha="174"/>
+	<s:Label 
+			 x="423" y="81" text="Turma:"/>
+	<s:CheckBox x="26" y="156" id="checkBoxSenha" label="Com Senha" click="geraCampoSenha()" />
+	<s:CheckBox id="checkBoxTrancada" x="118" y="156" label="Trancada"/>
+	<s:Label includeIn="comSenha" x="206" y="131" text="Senha:"/>
+	<s:TextInput id="campoSenha" focusIn="campoSenha.displayAsPassword = false" focusOut="campoSenha.displayAsPassword = true" visible.comSenha = "true" visible.semSenha="false"  x="206" y="151" width="180"/>
+	<s:Button includeIn="comSenha, semSenha" x="40" y="188" label="Criar" click="criarSala()"/>
+	<s:ComboBox id="numeroTurma" x="290" y="100" width="114" dataProvider="{turmas}"
+				x.comSenha="419" y.comSenha="100"
+				x.semSenha="423" y.semSenha="100"/>
+	<s:Label includeIn="comSenha" x="212" y="82" text="Disciplina:&#xd;"/>
+	<s:ComboBox id="nomeDisciplina0" includeIn="comSenha" x="212" y="101" width="174"
+				change="carregaTurma()" dataProvider="{disciplinas}"/>
+</s:TitleWindow>

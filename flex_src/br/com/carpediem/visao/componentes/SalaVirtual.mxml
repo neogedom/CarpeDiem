@@ -1,0 +1,791 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+				   xmlns:s="library://ns.adobe.com/flex/spark"
+				   xmlns:mx="library://ns.adobe.com/flex/mx"
+				   xmlns:componentes="br.com.carpediem.visao.componentes.*"
+				   width="1295" height="519" borderWeight="2" cornerRadius="8"
+				   creationComplete="ConectaServer()" currentState="{sala.view}"
+				   dropShadowVisible="true"  horizontalCenter="0" verticalCenter="-50"
+				   height.ViewProfessor="553">
+	<fx:Script source="../../controle/scripts/Controle.as" />
+	<fx:Script>
+		<![CDATA[	
+			import br.com.carpediem.controle.DataBind;
+			import br.com.carpediem.controle.Navegacao;
+			import br.com.carpediem.controle.States;
+			import br.com.carpediem.controle.events.OKEvent;
+			import br.com.carpediem.modelo.Aluno;
+			import br.com.carpediem.modelo.Aula;
+			import br.com.carpediem.modelo.Falta;
+			import br.com.carpediem.modelo.Sala;
+			import br.com.carpediem.modelo.Turma;
+			import br.com.carpediem.reports.dataproviders.DPTemplatePadrao;
+			import br.com.carpediem.reports.templates.TemplateLogChat;
+			import br.com.carpediem.visao.componentes.SalaVirtual;
+			import br.com.carpediem.visao.popups.PreviewReport;
+			import br.com.carpediem.visao.popups.TelaAlteraSala;
+			import br.com.carpediem.visao.popups.TelaSenhaSala;
+			
+			import flash.events.AsyncErrorEvent;
+			import flash.events.NetStatusEvent;
+			import flash.events.SyncEvent;
+			import flash.media.Camera;
+			import flash.media.Microphone;
+			import flash.media.Video;
+			import flash.net.NetConnection;
+			import flash.net.NetStream;
+			import flash.net.SharedObject;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.CollectionEvent;
+			import mx.events.FlexEvent;
+			import mx.events.ListEvent;
+			import mx.managers.CursorManager;
+			import mx.messaging.channels.StreamingAMFChannel;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			import mx.rpc.xml.SimpleXMLEncoder;
+			
+			import org.doc.Document;
+			import org.doc.PaperFormat;
+			import org.flexunit.events.AsyncEvent;
+			import org.osmf.elements.AudioElement;
+			import org.osmf.traits.AudioTrait;
+			
+			public var nc:NetConnection;
+			
+			private var userName:String;
+			private var roomSO:SharedObject;
+			
+			[Bindable]
+			public var sala:Sala = new Sala();
+			[Bindable]
+			public var aula:Aula;
+			[Bindable]
+			public var statusConnection:Boolean=false;
+			[Bindable]
+			public var RED5Status:String = "Aguardando Conexão";
+			[Bindable]
+			private var _userList:Array;
+			[Bindable]
+			private var al:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			private var alunos:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			private var alunosPresentes:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			private var data:Date;
+			
+			
+			//Funções Gerais
+			public static function SelecionaView(view:String):void
+			{
+				States.instance().currState = view;
+			}
+			
+			public function SairSala():void
+			{
+				parentApplication.removeElement(this);
+				DesconectaServer();
+				Navegacao.instance().AcessaTelaInicial();
+			}
+			
+			
+			// Gerência da Sala
+			//Professor
+			public function kickar():void
+			{
+				roomSO.send("recebeKick", datagridUsuarios.selectedItem.toString());
+			}
+			
+			//Aluno
+			public function recebeKick (usuario:String):void
+			{
+				var nome:String = DataBind.instance().usuarioAtual.pessoaFisica.nome + " " + DataBind.instance().usuarioAtual.pessoaFisica.sobrenome;
+				if (nome == usuario)
+				{
+					
+					SairSala();
+					Alert.show("Você foi kickado da sala. Se comporte da próxima vez, " + usuario, "Atenção");
+				}
+			}
+			
+			//Professor
+			public function cortarMicrofone():void
+			{
+				caixaSolicitacaoPalavra.text += "Corte de microfone efetuado com sucesso!";
+				roomSO.send("recebeCortarMicrofone", datagridUsuarios.selectedItem.toString());
+			}
+			
+			//Aluno
+			public function recebeCortarMicrofone (usuario:String):void
+			{
+				var nome:String = DataBind.instance().usuarioAtual.pessoaFisica.nome + " " + DataBind.instance().usuarioAtual.pessoaFisica.sobrenome;
+				if (nome == usuario)
+				{
+					if (DataBind.instance().nsCli == null)
+					{
+						Alert.show("O usuário não tem a palavra e seu microfone já está desabilitado", "Atenção");
+					}
+					DataBind.instance().cortarMicrofone();
+					//var st:SoundTransform = DataBind.instance().nsCli.soundTransform;
+					//st.volume = 0;
+					//DataBind.instance().nsCli.soundTransform = st;
+					caixaSolicitacaoPalavra.text += "Palavra encerrada. O microfone foi mutado \n";
+				}
+			}
+			
+			//Professor
+			public function cortarChat():void
+			{
+				
+				roomSO.send("recebeCortarChat", datagridUsuarios.selectedItem.toString());
+			}
+			
+			//Aluno
+			public function recebeCortarChat (usuario:String):void
+			{
+				var nome:String = DataBind.instance().usuarioAtual.pessoaFisica.nome + " " + DataBind.instance().usuarioAtual.pessoaFisica.sobrenome;
+				if (nome == usuario)
+				{
+					caixaMensagem.enabled = false;
+					Alert.show ("Seu chat foi desabilitado.", "Atenção");
+				}
+			}
+			
+			//Professor
+			public function habilitarChat():void
+			{
+				roomSO.send("recebeHabilitarChat", datagridUsuarios.selectedItem.toString());
+			}
+			
+			//Aluno
+			public function recebeHabilitarChat (usuario:String):void
+			{
+				var nome:String = DataBind.instance().usuarioAtual.pessoaFisica.nome + " " + DataBind.instance().usuarioAtual.pessoaFisica.sobrenome;
+				if (nome == usuario)
+				{
+					caixaMensagem.enabled = true;
+					Alert.show ("Seu chat foi habilitado.", "Atenção");
+				}
+			}
+			
+			//Professor
+			public function pegaNome(nome:String):void
+			{
+				if (currentState == "ViewProfessor")
+				{
+					
+					var cont:int;
+					var nomeAluno:String;
+					for (cont = 0; cont < aula.turma.aluno.length; cont++)
+					{
+						nomeAluno = (aula.turma.aluno.getItemAt(cont) as Aluno).nome + " " + (aula.turma.aluno.getItemAt(cont) as Aluno).sobrenome;
+						if (nomeAluno == nome)
+						{
+							alunosPresentes.addItem((aula.turma.aluno.getItemAt(cont) as Aluno).nome + " " + (aula.turma.aluno.getItemAt(cont) as Aluno).sobrenome);
+						}
+					}
+				}
+			}
+			
+			private function defineSenha():void
+			{
+				var painel:TelaSenhaSala = TelaSenhaSala(PopUpManager.createPopUp(this, TelaSenhaSala, true)); 
+				painel.addEventListener(OKEvent.OK, confereSenha, false, 0, true);
+				PopUpManager.centerPopUp(painel);
+			}
+			
+			public function confereSenha (event:OKEvent):void
+			{
+				this.sala.senha = DataBind.instance().senhaPopUp;
+				remoteObject.alteraSala(this.sala);
+			}
+			
+			private function resultado (e:ResultEvent):void{
+				Alert.show("Senha definida com sucesso!", "Atenção");
+			}
+			
+			private function falha (e:FaultEvent):void{
+				Alert.show("- Erro no BlazeDS\n" + e.fault.faultString);
+			}
+			
+			
+			
+			//Funções de Gerenciamento do Servidor Red5
+			private function ConectaServer():void
+			{	
+				remoteObject.getTurmaPorSala(sala.codigoSala);
+				userName = DataBind.instance().usuarioAtual.pessoaFisica.nome + " " + DataBind.instance().usuarioAtual.pessoaFisica.sobrenome;
+				if ( nc != null )
+					nc=null;
+				nc=new NetConnection();
+				nc.addEventListener( NetStatusEvent.NET_STATUS, netStatus );
+				nc.addEventListener(IOErrorEvent.IO_ERROR, ioError);
+				nc.addEventListener(AsyncErrorEvent.ASYNC_ERROR, asyncError);
+				nc.connect("rtmp://" + DataBind.instance().IPServidor + "/confDemo/" + sala.codigoSala, userName);
+				nc.client = {onBWDone: function():void {trace ("onBWDone")}};
+				CursorManager.setBusyCursor();
+			}
+				
+			
+			private function netStatus( e:NetStatusEvent ):void
+			{
+				statusConnection=false
+				switch ( e.info.code )
+				{
+					case "NetConnection.Connect.Success":
+						statusConnection=true;
+						CursorManager.removeBusyCursor();
+						RED5Status = " Conectado com sucesso!";
+						conectado();
+						break;
+					case "NetConnection.Connect.Closed":
+						
+						RED5Status ="Conexão Fechada!" ;                                                                                                                                                                                                                                   			RED5Status ="Conexão Fechada!";
+						statusConnection = false;
+						CursorManager.removeBusyCursor();
+						break;
+					case "NetConnection.Connect.Rejected":
+						RED5Status ="Conexão Rejeitada!"
+						statusConnection = false;
+						Alert.show("Falha ao conectar ao servidor!", "Atenção");
+						CursorManager.removeBusyCursor();
+						break;
+				}
+			}
+			
+			private static function asyncError( e:AsyncErrorEvent ):void
+			{
+				Alert.show(e.error.message);
+			}
+			
+			private function ioError(event:IOErrorEvent):void {
+				Alert.show(event.text);
+			}
+			
+			public function conectado():void
+			{	
+				roomSO=SharedObject.getRemote( "roomSO", nc.uri, false );
+				roomSO.addEventListener( SyncEvent.SYNC, OnSync );
+				roomSO.addEventListener(AsyncErrorEvent.ASYNC_ERROR, OnAsync);
+				roomSO.connect(nc);
+				roomSO.client=this;
+				botaoEnviarChat.enabled = true;
+				botaoImprimirConversa.enabled = true;
+			}
+			
+			//Invocado com a sincronia do SharedObject
+			private function OnSync( e:SyncEvent ):void
+			{
+				if (currentState == "ViewAluno")
+				{
+					roomSO.send("ConferePublicacao");
+				}
+				// Para a frenquencia
+				if (DataBind.instance().tolerante)
+				{
+					var array:ArrayCollection = new ArrayCollection(roomSO.data.userList);
+					roomSO.send("pegaNome", array.getItemAt(array.length - 1).toString());
+					
+				}
+				
+				if (roomSO.data.userList)
+				{ 
+					_userList = roomSO.data.userList;
+					
+				}
+			}
+			
+			public function ConferePublicacao():void
+			{
+				if (currentState == "ViewProfessor")
+				{
+					var publicando:Boolean = false;
+					if (DataBind.instance().nsPub != null)
+					{
+						publicando = true;
+					}
+					roomSO.send("recebeConferePublicacao", publicando);
+						
+				}
+			}
+			
+			
+			public function recebeConferePublicacao(publicando:Boolean):void
+			{
+				if (currentState == "ViewAluno")
+				{
+					btPublicar.enabled = publicando;
+				}
+			}
+			
+			private function OnAsync( e:AsyncErrorEvent ):void
+			{
+				Alert.show(e.error.message);
+			}
+		
+			
+			public function setId( id:Object ):void
+			{
+			}
+			
+			private function DesconectaServer ():void
+			{
+				
+				roomSO.close();
+				nc.close(); 
+				
+			}
+			
+			public function IniciarAula():void
+			{
+				
+				if (botaoIniciarAula.label == "Iniciar Aula")
+				{	
+					var nome:String = "";
+					var cont:int;
+					var i:int;
+					for (cont = 0; cont < _userList.length; cont++)
+					{
+					
+						for (i = 0; i < sala.turma.aluno.length; i++)
+						{
+							nome = (sala.turma.aluno.getItemAt(i) as Aluno).nome + " " + (sala.turma.aluno.getItemAt(i) as Aluno).sobrenome;
+							if (nome == _userList[cont].toString())
+							{
+							
+								alunosPresentes.addItem((sala.turma.aluno.getItemAt(i) as Aluno).nome + " " + (sala.turma.aluno.getItemAt(i) as Aluno).sobrenome);
+							
+							}
+						}
+					
+					}
+					
+					cronometro.visible = true;
+					cronometro.addEventListener(OKEvent.OK, inicia, false, 0, true);
+					botaoIniciarAula.label = "Finalizar Aula";
+				}
+				else {
+					data = new Date();
+					aula.horaFinal = (data.hours + "h" + data.minutes).toString();
+					roomSO.send("RecebeMensagem","Aula finalizada em " + aula.horaFinal + " no dia " + dateFormat.format(data) + "\n ------------------------------------------------------ \n");
+					remoteObject.cadastraAula(aula);
+					
+					sala.log = areaChat.text;
+					remoteObject.gravarLog(sala);
+					botaoIniciarAula.label = "Iniciar Aula";
+				}
+				
+				
+			}
+			
+			public function inicia(evento:OKEvent):void
+			{
+				
+				data = new Date();
+				var turma:Turma = new Turma();
+				aula = new Aula();
+				aula.data = data; 
+				aula.horaInicial = (data.hours + "h" + data.minutes).toString();
+				turma.codigoTurma = sala.turma.codigoTurma;
+				turma.ano = sala.turma.ano;
+				turma.aluno.addAll(sala.turma.aluno);
+				aula.turma = turma;
+				roomSO.send("RecebeMensagem","Aula iniciada em " + aula.horaInicial + " no dia " + dateFormat.format(data) + "\n ------------------------------------------------------ \n");
+				
+			}
+			
+			
+			
+			
+			
+			// Funções de gerenciamento de Vídeo e Áudio
+			private function publicar():void
+			{
+				if ( DataBind.instance().nsPub != null )
+				{
+					botaoPublicar.label="Publicar no servidor Red5!"
+					DataBind.instance().nsPub.close()
+					DataBind.instance().nsPub=null
+					roomSO.send("desabilitaVisualizar");
+				}
+				else
+				{
+					botaoPublicar.label="Parar publicação!"
+					
+					DataBind.instance().nsPub=new NetStream( nc );
+					DataBind.instance().nsPub.attachCamera( Camera.getCamera());
+					DataBind.instance().nsPub.attachAudio(Microphone.getMicrophone());
+					
+					// nome que será publicado
+					DataBind.instance().nsPub.publish( "videoPublish" );
+					vdMinhaWebCam.attachCamera( Camera.getCamera());
+					roomSO.send("habilitaVisualizar");
+				}
+			}
+			
+			public function habilitaVisualizar ():void
+			{
+				if (currentState == "ViewAluno")
+				{
+					btPublicar.enabled = true;
+				}
+			}
+			
+			public function desabilitaVisualizar ():void
+			{
+				if (currentState == "ViewAluno")
+				{
+					btPublicar.enabled = false;
+					btPublicar.label = "Visualizar VideoConferência"
+				}
+			}
+			
+			private function visualizar():void
+			{
+				if ( !statusConnection )
+				{
+					Alert.show( "Não conectado ao servidor!" )
+					return;
+				}
+				
+				if ( DataBind.instance().nsCli != null )
+				{
+					btPublicar.label="Visualizar do servidor";
+					
+					DataBind.instance().nsCli.close();
+					DataBind.instance().nsCli=null
+					botaoPedirPalavra.enabled = false;
+				}
+				else
+				{
+					btPublicar.label="Parar Visualização!";
+					
+					DataBind.instance().nsCli=new NetStream( nc )
+					var vid:Video=new Video();
+					vid.height=uiCaixaDoVideo.height;
+					vid.width=uiCaixaDoVideo.width;
+					vid.attachNetStream( DataBind.instance().nsCli );
+					
+					uiCaixaDoVideo.addChild( vid );
+					
+					// nome que foi publicado
+					DataBind.instance().nsCli.play( "videoPublish" );
+					botaoPedirPalavra.enabled = true;
+				}
+			}
+			
+			
+			
+			
+			// Funções responsáveis pelo Chat
+			private function EnviaMensagem():void
+			{
+				var msg:String= DataBind.instance().usuarioAtual.pessoaFisica.nome + " diz: " + caixaMensagem.text + "\n";
+				roomSO.send( "RecebeMensagem", msg );
+				caixaMensagem.text ='';
+			}
+			
+			public function RecebeMensagem( msg:String ):void
+			{
+				areaChat.text+=msg;
+				areaChat.validateNow();
+				areaChat.scroller.verticalScrollBar.value=areaChat.scroller.verticalScrollBar.maximum;
+			}
+			
+			
+			
+			
+			// Fucionalidade "Pedir Palavra"
+			//Aluno
+			private function PedirPalavra ():void
+			{
+				var usuario:String = DataBind.instance().usuarioAtual.pessoaFisica.nome;
+				DataBind.instance().usuarioPalavra = usuario;
+				roomSO.send("RecebePedirPalavra", usuario);
+				caixaSolicitacaoPalavra.text = "Solicitação de Palavra enviada. Aguardando autorização.\n";
+				
+			}
+			//Professor
+			public function RecebePedirPalavra(usuario:String):void
+			{
+				if (this.currentState == "ViewProfessor")
+				{
+					caixaSolicitacaoPalavra.text += "O Aluno " + usuario + " pediu palavra.\n";
+					botaoAutorizar.enabled = true;
+					botaoRecusar.enabled = true;
+				}
+				
+			}
+			//Professor
+			private function AutorizarPalavra():void
+			{
+				roomSO.send("RecebeAutorizarPalavra");
+			}
+			
+			private function RecusarPalavra():void
+			{
+				roomSO.send("RecebeRecusarPalavra");
+				botaoAutorizar.enabled = false;
+				botaoRecusar.enabled = false;
+			}
+			//Aluno
+			public function RecebeAutorizarPalavra():void
+			{
+				if (this.currentState == "ViewAluno" && DataBind.instance().usuarioAtual.pessoaFisica.nome == DataBind.instance().usuarioPalavra)
+				{
+					DataBind.instance().nsCli.attachAudio(Microphone.getMicrophone());
+					caixaSolicitacaoPalavra.text += "Solicitação de Palavra Aceita.\n";
+				}
+			}
+			
+			public function RecebeRecusarPalavra():void
+			{
+				if (this.currentState == "ViewAluno" && DataBind.instance().usuarioAtual.usuario == DataBind.instance().usuarioPalavra)
+				{
+					caixaSolicitacaoPalavra.text += "Solicitação de Palavra Recusada.\n";
+				}
+				
+			}
+			
+			protected function resultadoAluno(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var cont:int;
+				var aluno:Aluno;
+				al = event.result as ArrayCollection;
+				for (cont = 0; al.length; cont++)
+				{
+					aluno = al.getItemAt(cont) as Aluno;
+					alunos.addItem(aluno);
+				}
+				
+			}
+			
+			public function tabelaMudou(event:CollectionEvent):void
+			{
+				// TODO Auto-generated method stub
+				Alert.show("teste");
+			}
+			
+			protected function removeSala(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				var room:Sala = new Sala();
+				room.codigoSala = sala.codigoSala;
+				remoteObject.deletaSala(room);
+				
+			}
+			
+			protected function resultadoDelete(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var alert:Alert;
+				Alert.yesLabel = "Sim";
+				Alert.noLabel = "Não";
+				alert = Alert.show("Você tem certeza que quer limpar todos os campos?","Atenção",Alert.YES | Alert.NO);
+				alert.addEventListener(CloseEvent.CLOSE, fechado);
+			}
+			
+			public function fechado (evento:CloseEvent):void
+			{
+				Alert.show("Sala removida com sucesso!","Atenção");
+				SairSala();
+			}
+			
+			protected function editaSala(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				DataBind.instance().salaAlterada = sala;
+				var painel:TelaAlteraSala = TelaAlteraSala(PopUpManager.createPopUp(this, TelaAlteraSala, true)); 
+				painel.addEventListener(CloseEvent.CLOSE, editar, false, 0, true);
+				PopUpManager.centerPopUp(painel);
+			}
+			
+			public function editar (event:CloseEvent):void
+			{
+				this.sala = DataBind.instance().salaAlterada;
+			}
+			
+			protected function resultadoAula(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				Alert.show("Aula salva com sucesso","Atenção");
+				
+				// Computa a falta
+				var nome1:String = "";
+				var nome2:String = "";
+				var cont1:int;
+				var cont:int;
+				var i1:int;
+				var i2:int;
+				var daTurma:ArrayCollection = new ArrayCollection();
+				var falta:Falta;
+				var logFaltas:String = "";
+				
+				
+				
+				for (cont1 = 0; cont1 < sala.turma.aluno.length; cont1++)
+				{
+					nome1 = (sala.turma.aluno.getItemAt(cont1) as Aluno).nome + " " + (sala.turma.aluno.getItemAt(cont1) as Aluno).sobrenome;
+					if (alunosPresentes.contains(nome1))
+					{
+						for (cont = 0; cont < _userList.length; cont++)
+						{
+							//Para não pegar quem não faz parte da turma na lista						
+							
+							
+							if (nome1 == _userList[cont].toString() || _userList[cont].toString() == "Eduardo Magalhaes")
+							{
+								//Se o aluno estiver ainda na sala ao final da aula, não faz nada
+							}
+							else
+							{
+								falta = new Falta();
+								falta.aluno = (sala.turma.aluno.getItemAt(cont1) as Aluno);
+								logFaltas += falta.aluno.nome + " ganhou falta por ter saído antes\n";
+								falta.aula = aula;
+								remoteObject.computaFalta(falta);
+							}
+						}
+					}
+					else 
+					{
+						falta = new Falta();
+						falta.aluno = (sala.turma.aluno.getItemAt(cont1) as Aluno);
+						logFaltas += falta.aluno.nome + " ganhou falta por nem ter entrado\n";
+						falta.aula = aula;
+						remoteObject.computaFalta(falta);
+					}
+					
+					
+					
+				
+				}
+				Alert.show(logFaltas);
+			}
+			
+			
+			
+			protected function AcessaSalaControle(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				parentApplication.removeElement(this);
+				DesconectaServer();
+				Navegacao.instance().AcessaTelaControle()
+			}
+			
+			protected function imprimirConversa(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				var janela:PreviewReport = new PreviewReport();
+				janela.width = this.parent.width;
+				janela.height = this.parent.height;
+				var dp:DPTemplatePadrao= new DPTemplatePadrao();
+				dp.identificador = areaChat.text;
+				dp.sala = sala.nome;
+				var doc:Document = new Document( new TemplateLogChat(), dp, PaperFormat.A4);
+				PopUpManager.addPopUp(janela, DisplayObject(this.parentApplication), true);
+				PopUpManager.centerPopUp(janela);
+				janela.preview.doc = doc;
+			}
+			
+			protected function resultadoTurma(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				sala.turma = event.result as Turma;
+			}
+			
+		]]>
+	</fx:Script>
+	<s:states>
+		<s:State name="ViewAluno"/>
+		<s:State name="ViewProfessor"/>
+	</s:states>
+	<fx:Declarations>
+		<s:RemoteObject id="remoteObject" destination="FlexRemoto" fault="falha(event)">
+			<s:method name="alteraSala" result="resultado(event);" fault="falha(event)" />
+			<s:method name="getTurmaPorSala" result="resultadoTurma(event)" fault="falha(event)" />
+			<s:method name="listaAlunosPorTurma" result="resultadoAluno(event)" fault="falha(event)" />
+			<s:method name="deletaSala" result="resultadoDelete(event)" fault="falha(event)" />
+			<s:method name="computaFalta" fault="falha(event)" />
+			<s:method name="cadastraAula" result="resultadoAula(event)" fault="falha(event)" />
+			<s:method name="gravarLog"  fault="falha(event)" />
+		</s:RemoteObject>
+		<mx:DateFormatter id="dateFormat" formatString="DD/MM/YYYY"/>
+	</fx:Declarations>
+		<s:Panel x="0" y="30" width="378" height="344" title="Conferência">
+			<mx:Button id="btPublicar" includeIn="ViewAluno" x="23" y="10" width="215"
+					   label="Visualizar VideoConferência" click="visualizar()"
+					   enabled.ViewAluno="false" />
+			<s:BorderContainer includeIn="ViewAluno" x="28" y="39" width="316" height="240"
+					 backgroundColor="#000000">
+			</s:BorderContainer>
+			<mx:VideoDisplay id="vdMinhaWebCam" includeIn="ViewProfessor" x="22" y="35" width="320"
+							 height="240"/>
+			<mx:Button id="botaoPublicar" includeIn="ViewProfessor" x="23" y="10" width="215"
+					   label="Publicar Vídeo no Servidor" click="publicar()" enabled="{statusConnection}"/>
+			<s:VideoDisplay id="uiCaixaDoVideo" x="1" y="-13" width="100%" height="128"
+							toolTip="Captura de vídeo"
+							x.ViewAluno="28" y.ViewAluno="40" width.ViewAluno="315"
+							height.ViewAluno="239"
+							x.ViewProfessor="22" y.ViewProfessor="35" width.ViewProfessor="319"
+							height.ViewProfessor="240"/>
+		</s:Panel>
+		<s:Button x="187" y="394" width="170" height="23" label="Sair da Sala" click="SairSala()"
+				 />
+		<s:Button id="botaoPedirPalavra" includeIn="ViewAluno" x="10" y="394" width="170" height="23"
+				  label="Pedir palavra" click="PedirPalavra()" enabled="false"/>
+		<s:Panel id="chat" x="386" y="32" width="492" height="385" title="Chat"
+				>
+			<s:TextArea id="areaChat" x="10" y="10" width="470" height="252" editable="false"
+						x.ViewAluno="10" y.ViewAluno="12" text="{sala.log}"/>
+			<s:TextInput id="caixaMensagem" x="10" y="270" width="470" height="47"
+						 enter="EnviaMensagem()"/>
+			<s:Button id="botaoEnviarChat" x="332" y="321" width="148" label="Enviar"
+					  click="EnviaMensagem()" enabled="false"/>
+			<s:Button id="botaoImprimirConversa" x="10" y="319" label="Imprimir Conversa"
+					  click="imprimirConversa(event)" enabled="false"/>
+		</s:Panel>
+	<s:BorderContainer x="937" y="32" width="326" height="250">
+		<mx:DataGrid id="datagridUsuarios" x="10" y="11" width="304" dataProvider="{_userList}" height="230" variableRowHeight="true">
+			<mx:columns>
+				<mx:DataGridColumn headerText="Usuarios" dataField="USER_NOME"/>
+				<mx:DataGridColumn headerText="Ações" itemRenderer="br.com.carpediem.controle.renderers.UsersRenderer" includeIn="ViewProfessor">
+					
+				</mx:DataGridColumn>
+			</mx:columns>
+		</mx:DataGrid>
+	</s:BorderContainer>
+	<s:Button includeIn="ViewProfessor" x="5" y="394" width="170" height="23"
+			  label="Acessar Sala de Controle" click="AcessaSalaControle(event)"/>
+	<s:Button id="botaoIniciarAula" includeIn="ViewProfessor" x="5" y="426" width="170"
+			  label="Iniciar Aula" click="IniciarAula()"/>
+	<s:Panel x="937" y="293" width="326" height="198"
+			 title.ViewAluno="Solicitação de Palavra"
+			 title.ViewProfessor="Solicitação de Palavra">
+		<s:TextArea includeIn="ViewAluno" x="10" y="4" width="304" height="125"/>
+		<s:TextArea id="caixaSolicitacaoPalavra" x="10" y="5" width="304" height="124"
+					editable="false"/>
+		<s:Button id="botaoAutorizar" includeIn="ViewProfessor" x="10" y="137" width="85"
+				  label="Autorizar" enabled="false" click="AutorizarPalavra()"/>
+		<s:Button id="botaoRecusar" includeIn="ViewProfessor" x="103" y="137" width="85"
+				  label="Recusar" enabled="false"/>
+		<s:Button x="229" y="137" width="85" label="Limpar"/>
+	</s:Panel>
+	
+	<s:Label x="20" y="479" text="{RED5Status}"/>
+	<s:Label x="19" y="3" fontFamily="Verdana" fontSize="20"
+			 fontWeight="bold" text="Sala:{sala.nome}"/>
+	<s:HGroup includeIn="ViewProfessor" x="264" y="425" width="93" height="22">
+		<s:Image id="editImg" x="222" y="14" width="27" height="21" click.ViewProfessor="editaSala(event)"
+				 source="@Embed('../../assets/images/edit.png')" toolTip="Editar sala"/>
+		<s:Image id="removeImg" x="222" y="14" width="27" height="21" click="removeSala(event)"
+				 source="@Embed('../../assets/images/remove.png')" toolTip="Excluir sala"/>
+	</s:HGroup>
+	<componentes:Cronometro includeIn="ViewProfessor" x="509" y="439" fontWeight="normal" id="cronometro" visible="false">
+	</componentes:Cronometro>
+</s:BorderContainer>

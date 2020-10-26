@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:MXDataGridItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+						  xmlns:s="library://ns.adobe.com/flex/spark" 
+						  xmlns:mx="library://ns.adobe.com/flex/mx" 
+						  focusEnabled="true">
+	
+	<fx:Script>
+		<![CDATA[
+			import br.com.carpediem.controle.DataBind;
+			import br.com.carpediem.controle.Navegacao;
+			import br.com.carpediem.controle.States;
+			
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+
+			[Embed(source="../../assets/images/edit.png")]
+			[Bindable]
+			public var imgClsEdit:Class;
+			
+			[Embed(source="../../assets/images/save.png")]
+			[Bindable]
+			public var imgClsSave:Class;
+			
+			[Embed(source="../../assets/images/delete0.png")]
+			[Bindable]
+			public var imgClsDelete:Class;
+			
+			[Embed(source="../../assets/images/delete.png")]
+			[Bindable]
+			public var imgClsCancel:Class;
+			
+			
+			protected function editarDados(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				if (States.instance().currState == States.QUADRO_NOTAS)
+				{
+					if (DataBind.instance().usuarioAtual.pessoaFisica.nivelAcesso == 2)
+					{
+						if (editImg.source == imgClsEdit)
+						{
+							if (!DataBind.instance().linhaEditavel) {
+								parentDocument.editarDados();
+								DataBind.instance().linhaEditavel = true;
+								editImg.source = imgClsSave;
+								editImg.toolTip = "Salvar dados";
+								deleteImg.source = imgClsCancel;
+								deleteImg.toolTip = "Cancelar edição";
+							}
+							else{
+								Alert.show("Edite apenas uma linha de cada vez!");
+							}
+						} else {
+							if (!DataBind.instance().mudouEstado)
+							{
+								parentDocument.salvarDados();
+								editImg.source = imgClsEdit;
+								editImg.toolTip = "Editar dados";
+								deleteImg.source = imgClsDelete;
+								deleteImg.toolTip = "Remover dados";
+								DataBind.instance().linhaEditavel = false;
+							}	
+							else {
+								if (DataBind.instance().mudouCidade)
+								{
+									parentDocument.salvarDados();
+									editImg.source = imgClsEdit;
+									editImg.toolTip = "Editar dados";
+									deleteImg.source = imgClsDelete;
+									deleteImg.toolTip = "Remover dados";
+									DataBind.instance().linhaEditavel = false;
+								}	
+								else {
+									Alert.show("A cidade também deve ser alterada!", "Atenção");
+									DataBind.instance().mudouCidade = false;
+								}
+							}	
+						}
+					}
+					else
+					{
+						Alert.show("Operações reservadas apenas para o Professor.","Atenção");
+					}
+					
+				}
+				else if (States.instance().currState == States.MURAL)
+				{
+					if (DataBind.instance().usuarioAtual.pessoaFisica.nivelAcesso == 2 || DataBind.instance().usuarioAtual.pessoaFisica.nivelAcesso == 1 )
+					{
+						if (editImg.source == imgClsEdit)
+						{
+							if (!DataBind.instance().linhaEditavel) {
+								parentDocument.editarDados();
+								DataBind.instance().linhaEditavel = true;
+								editImg.source = imgClsSave;
+								editImg.toolTip = "Salvar dados";
+								deleteImg.source = imgClsCancel;
+								deleteImg.toolTip = "Cancelar edição";
+							}
+							else{
+								Alert.show("Edite apenas uma linha de cada vez!");
+							}
+						} else {
+							if (!DataBind.instance().mudouEstado)
+							{
+								parentDocument.salvarDados();
+								editImg.source = imgClsEdit;
+								editImg.toolTip = "Editar dados";
+								deleteImg.source = imgClsDelete;
+								deleteImg.toolTip = "Remover dados";
+								DataBind.instance().linhaEditavel = false;
+							}	
+							else {
+								if (DataBind.instance().mudouCidade)
+								{
+									parentDocument.salvarDados();
+									editImg.source = imgClsEdit;
+									editImg.toolTip = "Editar dados";
+									deleteImg.source = imgClsDelete;
+									deleteImg.toolTip = "Remover dados";
+									DataBind.instance().linhaEditavel = false;
+								}	
+								else {
+									Alert.show("A cidade também deve ser alterada!", "Atenção");
+									DataBind.instance().mudouCidade = false;
+								}
+							}	
+						}
+					}
+					else
+					{
+						Alert.show("Operações reservadas apenas para o Professor.","Atenção");
+					}
+				}
+				
+				else
+				{
+					if (DataBind.instance().usuarioAtual.pessoaFisica.nivelAcesso == 1)
+					{
+							if (editImg.source == imgClsEdit)
+						{
+							if (!DataBind.instance().linhaEditavel) {
+								parentDocument.editarDados();
+								DataBind.instance().linhaEditavel = true;
+								editImg.source = imgClsSave;
+								editImg.toolTip = "Salvar dados";
+								deleteImg.source = imgClsCancel;
+								deleteImg.toolTip = "Cancelar edição";
+							}
+							else{
+								Alert.show("Edite apenas uma linha de cada vez!");
+							}
+						} else {
+							if (!DataBind.instance().mudouEstado)
+							{
+								parentDocument.salvarDados();
+								editImg.source = imgClsEdit;
+							editImg.toolTip = "Editar dados";
+							deleteImg.source = imgClsDelete;
+							deleteImg.toolTip = "Remover dados";
+							DataBind.instance().linhaEditavel = false;
+						}	
+						else {
+							if (DataBind.instance().mudouCidade)
+							{
+								parentDocument.salvarDados();
+								editImg.source = imgClsEdit;
+								editImg.toolTip = "Editar dados";
+								deleteImg.source = imgClsDelete;
+								deleteImg.toolTip = "Remover dados";
+								DataBind.instance().linhaEditavel = false;
+							}	
+							else {
+								Alert.show("A cidade também deve ser alterada!", "Atenção");
+								DataBind.instance().mudouCidade = false;
+							}
+						}	
+					}
+				}
+				else
+				{
+					Alert.show("Operações reservadas apenas para o Administrador.","Atenção");
+				}
+				}
+				
+			}
+			
+			protected function deletarDados(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				if (States.instance().currState == States.QUADRO_NOTAS)
+				{
+					if (DataBind.instance().usuarioAtual.pessoaFisica.nivelAcesso == 2)
+					{
+						if (deleteImg.source == imgClsCancel)
+						{
+							deleteImg.source = imgClsDelete;
+							deleteImg.toolTip = "Remover dados";
+							editImg.source = imgClsEdit;
+							editImg.toolTip = "Editar dados";
+							parentDocument.cancelarEdicao();
+							DataBind.instance().linhaEditavel = false;
+						}
+							
+						else if (deleteImg.source == imgClsDelete)
+						{
+							if (!(States.instance().currState == States.QUADRO_NOTAS))
+							{
+								exibeAlert();
+							}
+							else {
+								Alert.show("Não é possível remover um boletim por essa tela. Para remover um boletim, remova o aluno da turma no Painel de Controle.");
+							}
+							
+						}
+						
+	
+						else
+						{
+							Alert.show("Operações reservadas apenas para o Professor.","Atenção");
+						}
+					}
+				}
+				
+				else if (States.instance().currState == States.MURAL)
+				{
+					if (DataBind.instance().usuarioAtual.pessoaFisica.nivelAcesso == 2 || DataBind.instance().usuarioAtual.pessoaFisica.nivelAcesso == 1 )
+					{
+						if (deleteImg.source == imgClsCancel)
+						{
+							deleteImg.source = imgClsDelete;
+							deleteImg.toolTip = "Remover dados";
+							editImg.source = imgClsEdit;
+							editImg.toolTip = "Editar dados";
+							parentDocument.cancelarEdicao();
+							DataBind.instance().linhaEditavel = false;
+						}
+							
+						else if (deleteImg.source == imgClsDelete)
+						{
+							if (!(States.instance().currState == States.QUADRO_NOTAS))
+							{
+								exibeAlert();
+							}
+							else {
+								Alert.show("Não é possível remover um boletim por essa tela. Para remover um boletim, remova o aluno da turma no Painel de Controle.");
+							}
+							
+						}
+							
+							
+						else
+						{
+							Alert.show("Operações reservadas apenas para o Professor.","Atenção");
+						}
+					}
+				}
+				
+				else {
+					if (DataBind.instance().usuarioAtual.pessoaFisica.nivelAcesso == 1)
+					{
+						if (deleteImg.source == imgClsCancel)
+						{
+							deleteImg.source = imgClsDelete;
+							deleteImg.toolTip = "Remover dados";
+							editImg.source = imgClsEdit;
+							editImg.toolTip = "Editar dados";
+							parentDocument.cancelarEdicao();
+							DataBind.instance().linhaEditavel = false;
+						}	
+				
+						else if (deleteImg.source == imgClsDelete)
+						{
+							if (!(States.instance().currState == States.QUADRO_NOTAS))
+							{
+								exibeAlert();
+							}
+						else{
+								Alert.show("Não é possível remover um boletim por essa tela. Para remover um boletim, remova o aluno da turma no Painel de Controle.");
+							}
+					
+						}
+					}
+					else
+					{
+						Alert.show("Operações reservadas apenas para o Administrador.","Atenção");
+					}
+				}	
+			}
+			
+			private function exibeAlert ():void
+			{	
+				var alert:Alert;
+				Alert.yesLabel = "Sim";
+				Alert.noLabel = "Não";
+				alert = Alert.show("Você tem certeza que quer deletar os dados selecionados? Isso pode deletar também outros dados que fazem referências a ele como, por exemplo, salas","Atenção",Alert.YES | Alert.NO);
+				alert.addEventListener(CloseEvent.CLOSE, fechado);
+			}
+			
+			private function fechado (evento:CloseEvent):void
+			{
+				switch (evento.detail)
+				{
+					case Alert.YES:
+						parentDocument.removerDados();
+						break;
+					case Alert.NO:
+						break;
+				}
+					
+			}
+			
+			
+		]]>
+	</fx:Script>
+	
+	<s:Image source="{imgClsEdit}" id="editImg" toolTip="Editar dados" click="editarDados(event)" />
+	<s:Image x="36" y="1" id="deleteImg" source="{imgClsDelete}" toolTip="Remover dados" click="deletarDados(event)"/>
+</s:MXDataGridItemRenderer>

@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Panel y="10" width="973" height="578" cornerRadius="8"
+		 horizontalCenter="0" title="Tela Inicial"
+		 xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 creationComplete="pesquisar()"  addedToStage="atualiza()">
+	<fx:Script source="../../controle/scripts/Controle.as" />
+	<fx:Script >
+		<![CDATA[
+			import br.com.carpediem.controle.DataBind;
+			import br.com.carpediem.controle.Navegacao;
+			import br.com.carpediem.modelo.Professor;
+			import br.com.carpediem.modelo.Sala;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.core.FlexGlobals;
+			import mx.events.CloseEvent;
+			import mx.managers.CursorManager;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import spark.events.TextOperationEvent;
+			
+			[Bindable]
+			public var salas:ArrayCollection = new ArrayCollection();
+	
+			
+			public static function adicionaSala (sala:Sala):void
+			{
+				DataBind.instance().listaDeSalas.addItem(sala);
+			}
+		
+			
+			private function resultadoSala (e:ResultEvent):void{
+				CursorManager.removeBusyCursor();
+				var cont:int;
+				salas.removeAll();
+				DataBind.instance().listaItemSalas.removeAll();
+				salas = e.result as ArrayCollection;
+				for (cont = 0; cont < salas.length; cont++)
+				{
+					var sala:Sala = Sala(salas.getItemAt(cont) as Sala);
+					var itemSala:ItemSala = new ItemSala();
+					DataBind.instance().turmaSala.aluno.removeAll();
+					DataBind.instance().nomeSala = sala.nome;  
+					DataBind.instance().nomeProfessor = sala.professor.nome;
+					DataBind.instance().nomeDisciplina = sala.disciplina.nome;
+					//Alert.show(sala.nome + " = " + sala.turma.aluno.length.toString());
+					DataBind.instance().turmaSala.codigoTurma = sala.turma.codigoTurma;
+					DataBind.instance().turmaSala.ano = sala.turma.ano;
+					DataBind.instance().turmaSala.aluno.addAll(sala.turma.aluno);
+					//Alert.show(sala.nome + " = " + sala.turma.aluno.length.toString() + "no DataBind");
+					DataBind.instance().listaItemSalas.addItem(itemSala);
+					TelaInicial.adicionaSala(sala);
+				}
+			}
+			
+			private function resultadoProfessor (e:ResultEvent):void{
+				var nomeProfessor:String = e.result as String;
+				DataBind.instance().nomeProfessor = nomeProfessor;
+			}
+			
+			private function falha (e:FaultEvent):void{
+				Alert.show("- Erro no BlazeDS\n" + e.fault.faultString);
+			}
+			
+			public function pesquisar():void
+			{	
+				CursorManager.setBusyCursor();
+				dataGroup.dataProvider.removeAll();
+				remoteObject.listaSalas();
+			}
+			
+			public function atualiza():void
+			{	
+				if (DataBind.instance().usuarioAtual.pessoaFisica.nivelAcesso == 3)
+				{
+					botaoCriarSala.visible = false;
+				}
+				comboSenha.selectedIndex == 0;
+				comboTravada.selectedIndex == 0;
+				dataGroup.dataProvider.removeAll();
+				remoteObject.listaSalas();
+			}
+			
+			public function onPopUpClose(event:Event):void
+			{
+				pesquisar();
+			}
+			
+			public function TelaCriaSala():void
+			{
+				var painel:TelaCriarSala = TelaCriarSala(PopUpManager.createPopUp(this, TelaCriarSala, true));
+				painel.addEventListener(CloseEvent.CLOSE, onPopUpClose, false, 0, true);
+				PopUpManager.centerPopUp(painel);
+				
+				
+			}
+			
+			protected function buscaSala(event:TextOperationEvent):void
+			{
+				
+				
+				// TODO Auto-generated method stub
+				var comSenha:Boolean;
+				var travada:Boolean;
+				
+				switch (comboSenha.selectedItem)
+				{
+					case "COM SENHA":
+						comSenha = true;
+						break;
+					case "SEM SENHA":
+						comSenha = false;
+						break;
+					
+				}
+				
+				switch (comboTravada.selectedItem)
+				{
+					case "TRAVADA":
+						travada = true;
+						break;
+					case "ABERTA":
+						travada = false;
+						break;
+					
+				}
+				
+				if (campoConsultaSala.text == "" ) {
+					if (comboSenha.selectedItem == "TODAS" && comboTravada.selectedItem == "TODAS")
+					{
+						remoteObject.listaSalas();
+					}
+					else if (comboSenha.selectedItem == "TODAS") {
+						remoteObject.buscaSalaT1(campoConsultaSala.text, travada);			
+					}
+					else if (comboTravada.selectedItem == "TODAS") {
+						remoteObject.buscaSalaS1(campoConsultaSala.text, comSenha);			
+					}
+				}
+				else if (comboSenha.selectedItem == "TODAS" && comboTravada.selectedItem == "TODAS")
+				{
+					remoteObject.buscaSala(campoConsultaSala.text);
+				}
+				
+				else if (comboSenha.selectedItem == "TODAS") {
+					remoteObject.buscaSalaT1(campoConsultaSala.text, travada);			
+				}
+				else if (comboTravada.selectedItem == "TODAS") {
+					remoteObject.buscaSalaS1(campoConsultaSala.text, comSenha);			
+				}
+			}
+			
+			protected function filtraComSenha():void
+			{
+				// TODO Auto-generated method stub
+				dataGroup.dataProvider.removeAll();
+				salas.removeAll();
+				
+				if (comboSenha.selectedItem == "TODAS")
+				{
+					if (comboTravada.selectedItem == "TODAS")
+					{
+						remoteObject.listaSalas();
+					}
+					else if (comboTravada.selectedItem == "TRAVADA")
+					{
+						remoteObject.buscaSalaT(true);
+					}
+					else if (comboTravada.selectedItem == "ABERTA")
+					{
+						remoteObject.buscaSalaT(false);
+					}
+				}
+				
+				else if (comboSenha.selectedItem == "COM SENHA")
+				{
+					if (comboTravada.selectedItem == "TODAS")
+					{
+						remoteObject.buscaSalaS(true);
+					}
+					else if (comboTravada.selectedItem == "TRAVADA")
+					{
+						remoteObject.buscaSala(true, true);
+					}
+					else if (comboTravada.selectedItem == "ABERTA")
+					{
+						remoteObject.buscaSala(true, false);
+					}
+				}
+				
+				else if (comboSenha.selectedItem == "SEM SENHA")
+				{
+					if (comboTravada.selectedItem == "TODAS")
+					{
+						remoteObject.buscaSalaS(false);
+					}
+					else if (comboTravada.selectedItem == "TRAVADA")
+					{
+						remoteObject.buscaSala(false, true);
+					}
+					else if (comboTravada.selectedItem == "ABERTA")
+					{
+						remoteObject.buscaSala(false, false);
+					}
+				}
+			
+				
+			}
+			
+			
+			protected function filtraTravada():void
+			{
+				// TODO Auto-generated method stub
+				dataGroup.dataProvider.removeAll();
+				salas.removeAll();
+				
+				if (comboTravada.selectedItem == "TODAS")
+				{
+					if (comboSenha.selectedItem == "TODAS")
+					{
+						remoteObject.listaSalas();
+					}
+					else if (comboSenha.selectedItem == "COM SENHA")
+					{
+						remoteObject.buscaSalaS(true);
+					}
+					else if (comboSenha.selectedItem == "SEM SENHA")
+					{
+						remoteObject.buscaSalaS(false);
+					}
+				}
+					
+				else if (comboTravada.selectedItem == "TRAVADA")
+				{
+					if (comboSenha.selectedItem == "TODAS")
+					{
+						remoteObject.buscaSalaT(true);
+					}
+					else if (comboSenha.selectedItem == "COM SENHA")
+					{
+						remoteObject.buscaSala(true, true);
+					}
+					else if (comboSenha.selectedItem == "SEM SENHA")
+					{
+						remoteObject.buscaSala(false, true);
+					}
+				}
+					
+				else if (comboTravada.selectedItem == "ABERTA")
+				{
+					if (comboSenha.selectedItem == "TODAS")
+					{
+						remoteObject.buscaSalaT(false);
+					}
+					else if (comboSenha.selectedItem == "COM SENHA")
+					{
+						remoteObject.buscaSala(true, false);
+					}
+					else if (comboSenha.selectedItem == "SEM SENHA")
+					{
+						remoteObject.buscaSala(false, false);
+					}
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<s:RemoteObject id="remoteObject" destination="FlexRemoto" fault="falha(event)">
+			<s:method name="listaSalas" result="resultadoSala(event);" fault="falha(event)" />
+			<s:method name="buscaSala" result="resultadoSala(event);" fault="falha(event)" />
+			<s:method name="buscaSalaS" result="resultadoSala(event);" fault="falha(event)" />
+			<s:method name="buscaSalaT" result="resultadoSala(event);" fault="falha(event)" />
+			<s:method name="buscaSalaS1" result="resultadoSala(event);" fault="falha(event)" />
+			<s:method name="buscaSalaT1" result="resultadoSala(event);" fault="falha(event)" />
+		</s:RemoteObject>
+	</fx:Declarations>
+
+		<s:BorderContainer x="10" y="25" width="318" height="439" cornerRadius="8">
+			<s:Scroller x="5" y="0" width="313" height="433">
+				<s:DataGroup id="dataGroup" width="100%" height="100%" dataProvider="{DataBind.instance().listaItemSalas}">
+					<s:layout>
+						<s:VerticalLayout/>
+					</s:layout>
+				</s:DataGroup>
+			</s:Scroller>
+		</s:BorderContainer>
+		<s:Label x="10" y="10" fontWeight="bold" text="Lista de Salas"/>
+		<s:Label x="350" y="10" fontWeight="bold" text="Dados de consulta"/>
+		<s:BorderContainer x="350" y="27" width="604" height="371" cornerRadius="8">
+			<s:Panel x="-1" y="-1" width="609" height="370" >
+				<s:BorderContainer x="18" width="574" height="214" verticalCenter="-64">
+					<s:layout>
+						<s:BasicLayout/>
+					</s:layout>
+					<s:TextInput id="campoConsultaSala" x="12" y="49" width="530" change="buscaSala(event)"/>
+					<s:Button id="botaoCriarSala" x="10" y="78" label="Criar Sala"
+							  click="TelaCriaSala()"/>
+					<s:Label x="10" y="30" fontWeight="bold" text="Pesquisa de Sala:"/>
+					<s:ComboBox x="10" y="141" id="comboSenha" change="filtraComSenha()" selectedIndex="0">
+						<s:ArrayCollection>
+							<fx:String>TODAS</fx:String>
+							<fx:String>COM SENHA</fx:String>
+							<fx:String>SEM SENHA</fx:String>
+						</s:ArrayCollection>
+					</s:ComboBox>
+					<s:Label x="10" y="121" text="Atributo senha:"/>
+					<s:ComboBox x="155" y="141" id="comboTravada" selectedIndex="0" change="filtraTravada()">
+							<s:ArrayCollection>
+								<fx:String>TODAS</fx:String>
+								<fx:String>TRAVADA</fx:String>
+								<fx:String>ABERTA</fx:String>
+							</s:ArrayCollection>
+					</s:ComboBox>
+					<s:Label x="155" y="121" text="Atributo travada:"/>
+				</s:BorderContainer>
+				<s:Label x="26" y="270" fontSize="15" fontWeight="bold"
+						 text="{DataBind.instance().boasVindasData}"/>
+				
+			</s:Panel>
+			<s:Label x="26" y="280" fontSize="15" fontWeight="bold"
+					 text="{DataBind.instance().boasVindas}"/>
+		</s:BorderContainer>
+	<s:Button x="870" y="407" label="Fazer Logoff"
+			  click="Navegacao.instance().AcessaLogin()"/>
+	<s:Button x="532" y="406" label="Acessar Quadro de Notas"
+			  click="Navegacao.instance().AcessaQuadroNotas()"/>
+	<s:Button x="700" y="406" label="Acessar Mural"
+			  click="Navegacao.instance().AcessaMural()"/>
+	<s:Button x="350" y="406" label="Entrar no Painel de Controle"
+			  click="Navegacao.instance().AcessaTelaControle()"/>
+</s:Panel>

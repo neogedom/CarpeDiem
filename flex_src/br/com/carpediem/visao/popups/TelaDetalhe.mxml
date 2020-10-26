@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+				xmlns:s="library://ns.adobe.com/flex/spark"
+				xmlns:mx="library://ns.adobe.com/flex/mx"
+				xmlns:controls="com.flexpernambuco.controls.*"
+				width="474" height="330" layout="absolute" showCloseButton="true" title="Detalhes" creationComplete="init(event)" close="PopUpManager.removePopUp(this)">
+	<fx:Script>
+		<![CDATA[
+			import br.com.carpediem.controle.DataBind;
+			import br.com.carpediem.controle.events.OKEvent;
+			import br.com.carpediem.modelo.Turma;
+			import br.com.carpediem.reports.dataproviders.DPTemplatePadrao;
+			import br.com.carpediem.reports.templates.TemplateAviso;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import org.doc.Document;
+			import org.doc.PaperFormat;
+			
+			[Bindable]
+			public var al:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alturma:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alturmacod:ArrayCollection = new ArrayCollection();
+			
+		
+			protected function init(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				labelDetalhe.text = DataBind.instance().detalheSelecionado;
+				remoteObject.listaTurmas();
+				//Alert.show(DataBind.instance().turmaAvisoSelecinada.codigoTurma.toString() + " U");
+				
+				//== (DataBind.instance().turmaAvisoSelecinada.codigoTurma).toString();
+				
+				if (DataBind.instance().tabelaDetalheEditavel)
+				{
+					botaoConcluir.enabled = true;
+					labelDetalhe.enabled = true;
+					comboTurma.enabled = true;
+					
+				}
+				else
+				{
+					botaoConcluir.enabled = false;
+					labelDetalhe.enabled = false;
+					comboTurma.enabled = false;
+				}
+			}
+			
+			protected function concluir(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				
+				DataBind.instance().avisoDetalhe = labelDetalhe.text;
+				DataBind.instance().turmaAvisoSelecinada = (alturma.getItemAt(comboTurma.selectedIndex) as Turma);
+				PopUpManager.removePopUp(this);
+				this.dispatchEvent( new OKEvent (OKEvent.OK));
+				
+				
+				
+			}
+			
+			protected function resultado(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				// TODO Auto-generated method stub
+				var cont:int;
+				var turma:Turma;
+				alturma.removeAll();
+				alturmacod.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; al.length; cont++)
+				{
+
+					turma = al.getItemAt(cont) as Turma;
+					alturma.addItem(turma);
+					alturmacod.addItem(turma.codigoTurma);
+					
+					if (DataBind.instance().turmaAvisoSelecinada.codigoTurma.toString() == alturmacod.getItemAt(cont).toString())
+					{
+						comboTurma.selectedIndex = cont;
+					}
+					
+				}
+			}
+			
+			protected function falha(event:FaultEvent):void
+			{
+				// TODO Auto-generated method stub
+				Alert.show("- Erro no BlazeDS\n" + event.fault.faultString);
+			}
+			
+			protected function Imprimir():void
+			{
+				var janela:PreviewReport = new PreviewReport();
+				janela.width = this.parent.width;
+				janela.height = this.parent.height;
+				var dp:DPTemplatePadrao= new DPTemplatePadrao();
+				dp.identificador = labelDetalhe.text;
+				dp.total = (alturma.getItemAt(comboTurma.selectedIndex) as Turma).disciplina.nome;
+				dp.turmaCodigo = (alturma.getItemAt(comboTurma.selectedIndex) as Turma).professor.nome + " " + (alturma.getItemAt(comboTurma.selectedIndex) as Turma).professor.sobrenome;
+				var doc:Document = new Document( new TemplateAviso(), dp, PaperFormat.A4);
+				PopUpManager.addPopUp(janela, DisplayObject(this.parentApplication), true);
+				PopUpManager.centerPopUp(janela);
+				janela.preview.doc = doc;
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<s:RemoteObject id="remoteObject" destination="FlexRemoto" fault="falha(event)">
+			<s:method name="listaTurmas" result="resultado(event)" fault="falha(event)" />
+		</s:RemoteObject>
+	</fx:Declarations>
+	<s:Button x="398" y="305" label="Concluir" id="botaoConcluir" click="concluir(event)"/>
+	<s:Label x="281" y="61" text="Turma:"/>
+	<s:ComboBox id="comboTurma"  dataProvider="{alturmacod}" selectedIndex="1" x="327" y="49"/>
+	<s:TextArea id="labelDetalhe" x="10" y="78" width="454" height="219"/>
+	<s:Button x="10" y="305" label="Imprimir " id="botaoImprimir" click="Imprimir()"  />
+</mx:TitleWindow>

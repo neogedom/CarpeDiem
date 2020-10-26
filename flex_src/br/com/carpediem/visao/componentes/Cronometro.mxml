@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 width="292" height="92" color="#010101" creationComplete="init()">
+	<fx:Script>
+		<![CDATA[
+			import br.com.carpediem.controle.DataBind;
+			import br.com.carpediem.controle.events.OKEvent;
+			
+			import flash.events.TimerEvent;
+			import flash.utils.Timer;
+			
+			import mx.controls.Alert;
+			private var cont:int;
+			private var t:Timer;
+			private var tempo:Number;//Tempo
+			
+			public function init():void{           
+			//1º - Tempo, 2º Quantidade de vezes (o=infinito)
+			t = new Timer(1000);
+			t.addEventListener("timer", this.executa);
+			}
+			public function parar():void{
+			t.stop();//Para a contagem
+			}
+			
+			private function iniciar():void
+			{
+			
+				if (toleranciaMin.text == "" || toleranciaMin.text == "0")
+				{
+					Alert.show("Preencha o campo com a quantidade de minutos!","Atenção");
+				}
+				else {
+					tempo = (parseInt(toleranciaMin.text) * 60);
+					cont=tempo+1;//carrega o contador com o tempo inicial
+					t.start();//inicia  a contagem 
+					DataBind.instance().tolerante = true;
+					this.dispatchEvent( new OKEvent (OKEvent.OK));	
+				}
+				
+			}
+			
+			public function executa(event:TimerEvent):void {
+			if(cont<=1)
+			{
+				t.stop();
+				DataBind.instance().tolerante = false;
+				
+			}//Quando chegar no fim da contagem para o tempo           
+			cont-=1;//faz a contagem decrescente
+			cron.text=cont.toString();//Apresenta a contagem na tela
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<mx:Button click="iniciar()" x="5" y="44" label="Iniciar"/>
+	<mx:TextInput id="cron" x="75" y="44" width="182" editable="false"/>
+	<s:Label x="4" y="12" color="#552A06" fontSize="13" fontWeight="bold"
+			 text="Tolerância de atraso :"/>
+	<s:Label x="221" y="12" color="#552A06" fontSize="13" fontWeight="bold"
+			 text="minutos"/>
+	<s:TextInput id="toleranciaMin" x="170" y="9" width="47"/>
+</s:Group>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<print:PrintComponent xmlns:fx="http://ns.adobe.com/mxml/2009"
+					  xmlns:s="library://ns.adobe.com/flex/spark"
+					  xmlns:mx="library://ns.adobe.com/flex/mx"
+					  xmlns:print="org.print.*"
+					  width="595" height="72" creationComplete="init()">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<mx:DateFormatter id="dateFormatter" formatString="DD/MM/YYYY" />
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			[Bindable]
+			public var dateString:String;
+			[Bindable]
+			public var total:String;
+			
+			
+			private function init():void
+			{
+				var date:Date = new Date();
+				dateString = dateFormatter.format(date);
+			}
+		]]>
+	</fx:Script>
+	<s:Image x="0" y="0" width="595" height="100%" scaleMode="stretch"
+			 source="@Embed('../../assets/images/blankpage.png')"/>
+	<s:Label y="48" right="233" color="#000000" fontFamily="Times New Roman" fontStyle="normal"
+			 fontWeight="bold" text="Sistema Carpe Diem"/>
+	<s:Label x="10" y="10" color="#010101" fontFamily="Verdana" fontSize="10" fontStyle="normal"
+			 fontWeight="bold" text="Total: {total} resultados."/>
+	<s:Label x="425" y="10" color="#030303" fontFamily="Verdana" fontSize="10" fontStyle="normal"
+			 fontWeight="bold" text="Gerado em {dateString}"/>
+	
+	
+</print:PrintComponent>

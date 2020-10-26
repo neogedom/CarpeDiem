@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				xmlns:s="library://ns.adobe.com/flex/spark" 
+				xmlns:mx="library://ns.adobe.com/flex/mx" layout="absolute" width="492" height="300" title="Faltas" 
+				close="PopUpManager.removePopUp(this)" showCloseButton="true" creationComplete="init(event)">
+	<fx:Script>
+		<![CDATA[
+			import br.com.carpediem.controle.DataBind;
+			
+			import mx.events.CloseEvent;
+			
+			import br.com.carpediem.modelo.Disciplina;
+			import br.com.carpediem.modelo.Falta;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.DataGridEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			[Bindable]
+			public var rowNumber:int;
+			[Bindable]
+			public var itemSelecionado:String;
+			[Bindable]
+			public var al:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alfalta:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alnome:ArrayCollection = new ArrayCollection();
+			
+			protected function init(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				tabelaFalta.editable = DataBind.instance().tabelaFaltaEditavel;
+				remoteObject.listaFaltaBoletim(DataBind.instance().boletimLinhaSelecionada.codigoBoletim);
+			}
+			
+			
+			protected function resultadoFaltas(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var cont:int;
+				var falta:Falta;
+				al = event.result as ArrayCollection;
+				for (cont = 0; al.length; cont++)
+				{
+					falta = al.getItemAt(cont) as Falta;
+					alfalta.addItem(falta);
+					
+				}
+			}
+			
+			private function falha (e:FaultEvent):void
+			{
+				Alert.show("- Erro no BlazeDS\n" + e.fault.faultString);
+			}
+			
+			public function salvarDados():void
+			{
+				tabelaFalta.editable = false;
+				
+			}
+			
+			public function removerDados():void
+			{
+				alfalta.removeItemAt(tabelaFalta.selectedIndex);
+				
+			}
+			
+			public function cancelarEdicao():void
+			{
+				tabelaFalta.editable = false;
+				alfalta.removeAll();
+				remoteObject.listaDisciplinaAlunos();
+				Alert.show("A edição para esta tabela foi cancelada!");
+				
+			}
+			
+			private function concluir():void
+			{
+				DataBind.instance().faltasBoletimSelecionado = alfalta;
+				PopUpManager.removePopUp(this);
+			}
+			
+			public function clickHandler(event:Event):void
+			{
+				//Alert.show(event.currentTarget.selectedItem);
+				itemSelecionado = event.currentTarget.selectedItem;
+				
+			}
+			
+			
+			public function deletaDisciplina():void
+			{
+				if (!DataBind.instance().tabelaFaltaEditavel)
+				{
+					Alert.show("Libere a edição de dados na tabela de boletins para poder deletar alguma falta!", "Atenção");
+				}
+				else
+				{
+					var alert:Alert;
+					Alert.yesLabel = "Sim";
+					Alert.noLabel = "Não";
+					alert = Alert.show("Você tem certeza que quer deletar essa falta? Ela não poderá ser incluída novamente através desta interface.","Atenção",Alert.YES | Alert.NO);
+					alert.addEventListener(CloseEvent.CLOSE, fechado);
+					
+				}
+			}
+			
+			private function fechado (evento:CloseEvent):void
+			{
+				switch (evento.detail)
+				{
+					case Alert.YES:
+						alfalta.removeItemAt(tabelaFalta.selectedIndex);
+						break;
+					case Alert.NO:
+						break;
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<s:RemoteObject id="remoteObject" destination="FlexRemoto" fault="falha(event)">
+			<s:method name="listaFaltaBoletim" result="resultadoFaltas(event)" fault="falha(event)" />
+		</s:RemoteObject>
+		<mx:DateFormatter id="dateFormat" formatString="DD/MM/YYYY"/>
+	</fx:Declarations>
+	<mx:DataGrid id="tabelaFalta" x="9" y="29" width="473" height="240"
+				 color="#4C2600" dataProvider="{alfalta}"
+				 variableRowHeight="true" >
+		<mx:columns>
+			<mx:DataGridColumn dataField="codigoFalta"
+							   headerText="Código" sortable="false">
+				<mx:itemEditor>
+					<fx:Component>
+						<mx:ComboBox selectedItem="{outerDocument.itemSelecionado}" click="outerDocument.clickHandler(event)" dataProvider="{outerDocument.alnome}" />
+					</fx:Component>
+				</mx:itemEditor>
+			</mx:DataGridColumn>
+			<mx:DataGridColumn dataField="aula.codigoAula" headerText="Aula" sortable="false"/>
+			<mx:DataGridColumn dataField="aula.data" headerText="Data" sortable="false">
+				<mx:itemRenderer>
+					<fx:Component>
+						<mx:Label text="{outerDocument.dateFormat.format(data.aula.data)}"/>
+					</fx:Component>
+				</mx:itemRenderer>
+			</mx:DataGridColumn>
+			<mx:DataGridColumn dataField="aula.horaInicial" headerText="Hora" sortable="false"/>
+			<mx:DataGridColumn dataField="justificativa" headerText="Justificativa" sortable="false"/>
+			<mx:DataGridColumn dataField="operacoes" headerText="Operações" editable="false">
+				<mx:itemRenderer>
+					<fx:Component>
+						<mx:Image source="@Embed('../../assets/images/delete0.png')" click="outerDocument.deletaDisciplina()" />					
+					</fx:Component>
+				</mx:itemRenderer>
+			</mx:DataGridColumn>
+		</mx:columns>
+	</mx:DataGrid>
+	<s:Button x="365" y="277" width="117" label="Concluir" click="concluir()" enabled="{DataBind.instance().tabelaFaltaEditavel}"/>
+</mx:TitleWindow>

@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+				   xmlns:s="library://ns.adobe.com/flex/spark"
+				   xmlns:mx="library://ns.adobe.com/flex/mx"
+				   width="310" height="77" backgroundColor="#FDFBFB" borderColor="#000000"
+				   borderWeight="2" click="AcessaSalaVirtual()" cornerRadius="8"
+				   creationComplete="init()" dropShadowVisible="true" mouseOut="normal(event)"
+				   mouseOver="hovered(event)" rollOverColor="#3E88F7"
+				   width.hovered="291" backgroundColor.hovered="#EAE4E4"
+				   width.normal="291" backgroundColor.normal="#FFFFFF">
+	<fx:Declarations> 
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import br.com.carpediem.controle.DataBind;
+			import br.com.carpediem.controle.Navegacao;
+			import br.com.carpediem.controle.events.OKEvent;
+			import br.com.carpediem.modelo.Aluno;
+			import br.com.carpediem.modelo.Disciplina;
+			import br.com.carpediem.modelo.Professor;
+			import br.com.carpediem.modelo.Sala;
+			import br.com.carpediem.modelo.Turma;
+			import br.com.carpediem.visao.componentes.SalaVirtual;
+			import br.com.carpediem.visao.popups.TelaCriarSala;
+			import br.com.carpediem.visao.popups.TelaSenhaSala;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.core.BitmapAsset;
+			import mx.core.UIComponent;
+			import mx.events.CloseEvent;
+			import mx.managers.PopUpManager;
+			
+			private var painel:TelaSenhaSala;
+			
+			[Embed(source="../../assets/images/locked.png")]
+			[Bindable]
+			public var imgCls:Class;
+			
+			[Bindable]
+			public static var indexSala:int;
+			[Bindable]
+			public var sala:Sala;
+			[Bindable]
+			public var codigoSala:int;
+			[Bindable]
+			public var nomeSala:String = "";
+			[Bindable]
+			public var nomeProfessor:String = "";
+			[Bindable]
+			public var nomeDisciplina:String = "";
+			[Bindable]
+			public var senhaSala:String = "";
+			[Bindable]
+			public var comSenhaSala:Boolean;
+			[Bindable]
+			public var travada:Boolean;
+			[Bindable]
+			public var codigoTurma:int;
+			[Bindable]
+			public var anoTurma:String;
+			[Bindable]
+			public var alunosTurma:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var log:String;
+			
+			private function init():void
+			{
+				sala = DataBind.instance().listaDeSalas.getItemAt(indexSala) as Sala;
+				codigoSala = sala.codigoSala;
+				nomeSala = sala.nome;
+				nomeProfessor = sala.professor.nome;
+				nomeDisciplina = sala.disciplina.nome;
+				senhaSala = sala.senha;
+				comSenhaSala = sala.comSenha;
+				travada = sala.travada;
+				log = sala.log;
+				//codigoTurma = sala.turma.codigoTurma;
+				//anoTurma = sala.turma.ano;
+				//alunosTurma.addAll(sala.turma.aluno);
+				indexSala++;
+				
+				if (travada)
+				{
+					travadaImg.source = imgCls;
+					travadaImg.toolTip = "Sala travada";
+					
+				}
+				
+				if (comSenhaSala)
+				{
+					senhaImg.visible = true;
+				}
+			}
+			
+			public function confereSenha (event:OKEvent):void
+			{
+				if (senhaSala == DataBind.instance().senhaPopUp)
+				{
+					EntraSala();
+				}
+				else {
+					Alert.show("Senha Inválida!", "Atenção");
+				}
+			}
+			
+			private function AcessaSalaVirtual():void
+			{
+				if (travada == true)
+				{
+					var cont:int;
+					var flag:Boolean = false;
+					var nome:String;
+					var nomeUsuario:String = DataBind.instance().usuarioAtual.pessoaFisica.nome + " " + DataBind.instance().usuarioAtual.pessoaFisica.sobrenome;
+					for (cont = 0; cont <  DataBind.instance().turmaSala.aluno.length; cont++)
+					{
+						nome = (DataBind.instance().turmaSala.aluno.getItemAt(cont) as Aluno).nome + " " + (DataBind.instance().turmaSala.aluno.getItemAt(cont) as Aluno).sobrenome;
+						if (nome == nomeUsuario || nomeProfessor == DataBind.instance().usuarioAtual.pessoaFisica.nome)
+						{
+							EntraSala();
+							return;
+						}
+					}
+					
+					Alert.show("A sala está travada! Você não pode entrar!");
+					
+				}
+				else {
+					if (comSenhaSala == true)
+					{
+						painel = TelaSenhaSala(PopUpManager.createPopUp(this, TelaSenhaSala, true)); 
+						painel.addEventListener(OKEvent.OK, confereSenha, false, 0, true);
+						PopUpManager.centerPopUp(painel);
+					}
+					else {
+						EntraSala();
+					}
+				}
+				
+			}
+			
+			private function EntraSala():void
+			{
+				var salaVirtual:SalaVirtual = new SalaVirtual();
+				var num1:uint = DataBind.instance().nivelAcesso;
+				
+				if (num1 == 2)
+				{
+					if (DataBind.instance().usuarioAtual.pessoaFisica.nome == nomeProfessor)
+					{
+						
+						salaVirtual.sala.view = "ViewProfessor";
+					}
+					else {
+						salaVirtual.sala.view = "ViewAluno";
+					}
+				} 
+				else if (num1 == 3)
+				{
+					salaVirtual.sala.view = "ViewAluno";
+				}
+				
+				var disciplina:Disciplina =  new Disciplina();
+				var professor:Professor = new Professor();
+				salaVirtual.sala.codigoSala = codigoSala;
+				salaVirtual.sala.nome = nomeSala;
+				salaVirtual.sala.senha = senhaSala;
+				
+				disciplina.nome = nomeDisciplina;
+				salaVirtual.sala.disciplina = disciplina;
+				
+				professor.nome = nomeProfessor;
+				salaVirtual.sala.professor = professor;
+				
+				/*var turma1:Turma = new Turma();
+				turma1.codigoTurma = codigoTurma;
+				turma1.ano = anoTurma;
+				//turma1.aluno.addAll(alunosTurma);
+				Alert.show(salaVirtual.sala.nome + " = " + salaVirtual.sala.turma.aluno.length.toString() + "no ItemSala");*/
+				salaVirtual.sala.comSenha = comSenhaSala;
+				salaVirtual.sala.travada = travada;
+				salaVirtual.sala.log = log;
+				Navegacao.instance().AcessaSalaVirtual();
+				parentApplication.addElement(salaVirtual);
+			}
+			
+			protected function hovered(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				currentState = "hovered";
+			}
+			
+			protected function normal(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				currentState = "normal";
+			}
+			
+		]]>
+	</fx:Script>
+	<s:states>
+		<s:State name="normal"/>
+		<s:State name="hovered"/>
+	</s:states>
+	<mx:Canvas width="310" height="73" horizontalCenter="0" verticalCenter="0"
+			   width.hovered="287"
+			   width.normal="287" horizontalCenter.normal="0" verticalCenter.normal="0">
+	<s:Image id="senhaImg" source="@Embed('../../assets/images/password.png')"
+			 x="253" y="14" visible="false" toolTip="Sala com senha"/>
+	<s:Image id="travadaImg" source="@Embed('../../assets/images/unlocked.png')"
+			 toolTip="Sala com senha" x = "253" y="39"/>
+	</mx:Canvas>
+	<s:Label id="labelNome" x="10" y="12" height="13" fontWeight="bold" text="Sala: {nomeSala}"
+			/>
+	<s:Label id="labelDisciplina" x="10" y="33" fontWeight="bold" text="Disciplina: {nomeDisciplina}"
+			 />
+	<s:Label id="labelProfessor" x="11" y="53" fontWeight="bold" text="Professor: {nomeProfessor}"
+			/>
+</s:BorderContainer>

@@ -1,0 +1,1700 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   xmlns:components="br.com.carpediem.reports.components.*"
+			   width="400" height="300" close="PopUpManager.removePopUp(this)" title="Relatórios">
+	<fx:Script>
+		<![CDATA[
+			import br.com.carpediem.controle.States;
+			import br.com.carpediem.modelo.Administrador;
+			import br.com.carpediem.modelo.Aluno;
+			import br.com.carpediem.modelo.Aula;
+			import br.com.carpediem.modelo.Boletim;
+			import br.com.carpediem.modelo.Curso;
+			import br.com.carpediem.modelo.Disciplina;
+			import br.com.carpediem.modelo.Falta;
+			import br.com.carpediem.modelo.Professor;
+			import br.com.carpediem.modelo.Sala;
+			import br.com.carpediem.modelo.Turma;
+			import br.com.carpediem.reports.dataproviders.DPTemplatePadrao;
+			import br.com.carpediem.reports.templates.TemplateDisciplina;
+			import br.com.carpediem.reports.templates.TemplateFrequencia;
+			import br.com.carpediem.reports.templates.TemplatePadrao;
+			import br.com.carpediem.reports.templates.TemplatePessoa;
+			import br.com.carpediem.reports.templates.TemplateRendimento;
+			import br.com.carpediem.reports.templates.TemplateSala;
+			import br.com.carpediem.reports.templates.TemplateTurma;
+			
+			import mx.controls.Alert;
+			import mx.controls.DateField;
+			import mx.controls.TextInput;
+			import mx.core.IVisualElement;
+			import mx.events.FlexEvent;
+			import mx.events.ListEvent;
+			import mx.managers.CursorManager;
+			import mx.managers.PopUpManager;
+			import mx.messaging.channels.StreamingAMFChannel;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import org.doc.Document;
+			import org.doc.PaperFormat;
+			
+			import spark.events.IndexChangeEvent;
+			
+			[Bindable]
+			public var array:ArrayCollection = new ArrayCollection;
+			[Bindable]
+			public var ti:IVisualElement;
+			[Bindable]
+			public var tiAte:IVisualElement;
+			[Bindable]
+			public var lbl:Label = new Label();
+			[Bindable]
+			public var lblAte:Label = new Label();
+			[Bindable]
+			public var componente:IVisualElement;
+			[Bindable]
+			public var label:Label = new Label();
+			
+			private var al:ArrayCollection;
+			[Bindable]
+			public var alfalta:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alaula:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alboletim:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alturma:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alsala:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alcurso:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alcurso1:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var aldisciplina:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var aldisciplina1:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var aladministrador:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alaluno:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alnomeAluno:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alsobrenomeAluno:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alcodigoAluno:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alnomesobrenome:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alprofessor:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alprofessornomesobrenome:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alprofessornome:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alprofessorsobrenome:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alaluno1:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alalunonomesobrenome:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alalunonome:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alalunosobrenome:ArrayCollection = new ArrayCollection();
+			
+			protected function mudaCampoParametro(event:IndexChangeEvent):void
+			{
+				//Exibir faltas por
+				//TURMA
+				if (comboFaltasPor.selectedIndex == 0)
+				{
+					comboFiltro.selectedIndex = -1;
+					currentState = "State1";
+					remoteObject.listaTurmas();
+					comboFiltro.dataProvider = alturma;
+				}
+				//CURSO
+				if (comboFaltasPor.selectedIndex == 1)
+				{
+					comboFiltro.selectedIndex = -1;
+					currentState = "State1";
+					remoteObject.listaCursos();
+					comboFiltro.dataProvider = alcurso;
+				}
+				//DATA
+				if (comboFaltasPor.selectedIndex == 2)
+				{
+					currentState = "DateField";
+					//Por Aluno
+					if (comboFiltro0.selectedIndex == 0)
+					{
+						remoteObject.listaAlunos();
+						comboFiltro1.dataProvider = alalunonomesobrenome;
+					}
+					
+					//Por Professor
+					if (comboFiltro0.selectedIndex == 1)
+					{
+						remoteObject.listaProfessores();
+						comboFiltro1.dataProvider = alprofessornomesobrenome;
+					}
+					
+					//Por Disciplina
+					if (comboFiltro0.selectedIndex == 2)
+					{
+						remoteObject.listaDisciplinas();
+						comboFiltro1.dataProvider = aldisciplina;
+					}
+					
+				}
+				//PROFESSOR
+				if (comboFaltasPor.selectedIndex == 3)
+				{
+					comboFiltro.selectedIndex = -1;
+					currentState = "State1";
+					remoteObject.listaProfessores();
+					comboFiltro.dataProvider = alprofessornomesobrenome;
+				}
+				//DISCIPLINA
+				if (comboFaltasPor.selectedIndex == 4)
+				{
+					comboFiltro.selectedIndex = -1;
+					currentState = "State1";
+					remoteObject.listaDisciplinas();
+					comboFiltro.dataProvider = aldisciplina;
+				}
+				//ALUNO
+				if (comboFaltasPor.selectedIndex == 5)
+				{
+					comboFiltro.selectedIndex = -1;
+					currentState = "State1";
+					remoteObject.listaAlunos();
+					comboFiltro.dataProvider = alalunonomesobrenome;
+				}
+			}
+			
+			protected function mudaFiltro(event:IndexChangeEvent):void
+			{
+				// TODO Auto-generated method stub
+				var arr:ArrayCollection = new ArrayCollection();
+				if (comboRelatoriosComuns.selectedIndex == 0)
+				{
+					comboTipoFiltroRelatoriosComuns.selectedIndex = -1;
+					comboFiltroRelatoriosComuns.selectedIndex = -1;
+					arr.removeAll();
+					arr.addItem("CURSO");
+					arr.addItem("DISCIPLINA");
+					comboTipoFiltroRelatoriosComuns.dataProvider = arr;
+					
+				}
+				if (comboRelatoriosComuns.selectedIndex == 1)
+				{
+					comboTipoFiltroRelatoriosComuns.selectedIndex = -1;
+					comboFiltroRelatoriosComuns.selectedIndex = -1;
+					arr.removeAll();
+					arr.addItem("CURSO");
+					arr.addItem("PROFESSOR");
+					comboTipoFiltroRelatoriosComuns.dataProvider = arr;
+				}
+				if (comboRelatoriosComuns.selectedIndex == 2)
+				{
+					comboTipoFiltroRelatoriosComuns.selectedIndex = -1;
+					comboFiltroRelatoriosComuns.selectedIndex = -1;
+					arr.removeAll();
+					arr.addItem("CURSO");
+					arr.addItem("TURMA");
+					arr.addItem("PROFESSOR");
+					arr.addItem("DISCIPLINA");
+					comboTipoFiltroRelatoriosComuns.dataProvider = arr;
+				}
+				if (comboRelatoriosComuns.selectedIndex == 3)
+				{
+					comboTipoFiltroRelatoriosComuns.selectedIndex = -1;
+					comboFiltroRelatoriosComuns.selectedIndex = -1;
+					arr.removeAll();
+					arr.addItem("CURSO");
+					arr.addItem("ALUNO");
+					arr.addItem("PROFESSOR");
+					arr.addItem("DISCIPLINA");
+					comboTipoFiltroRelatoriosComuns.dataProvider = arr;
+				}
+				if (comboRelatoriosComuns.selectedIndex == 4)
+				{
+					comboTipoFiltroRelatoriosComuns.selectedIndex = -1;
+					comboFiltroRelatoriosComuns.selectedIndex = -1;
+					arr.removeAll();
+					arr.addItem("TURMA");
+					arr.addItem("PROFESSOR");
+					arr.addItem("DISCIPLINA");
+					comboTipoFiltroRelatoriosComuns.dataProvider = arr;
+				}
+			}
+			
+			
+			private function falha (e:FaultEvent):void{
+				Alert.show("- Erro no BlazeDS\n" + e.fault.faultString);
+			}
+			
+			private function gerarRelatorio():void
+			{
+				CursorManager.setBusyCursor();
+				if (tabNavigator.selectedChild.label== "Faltas")
+				{
+					if (comboFaltasPor.selectedIndex == 0)
+					{
+						var codigo:int = parseInt(alturma.getItemAt(comboFiltro.selectedIndex).toString());
+						remoteObject.listaFaltasPorTurma(codigo);
+					}	
+					if (comboFaltasPor.selectedIndex == 1)
+					{
+						var curso:String = alcurso.getItemAt(comboFiltro.selectedIndex).toString();
+						remoteObject.listaFaltasPorCurso(curso);
+					}
+					if (comboFaltasPor.selectedIndex == 2)
+					{
+						var dataDe:Date = campoDe.selectedDate;
+						var dataAte:Date = campoAte.selectedDate;
+						//Data por ALuno
+						if (comboFiltro0.selectedIndex == 0)
+						{
+							remoteObject.listaFaltasPorDataAluno(dataDe, dataAte, alalunonome.getItemAt(comboFiltro1.selectedIndex).toString(), alalunosobrenome.getItemAt(comboFiltro1.selectedIndex).toString());
+						}
+						//Data por Professor
+						if (comboFiltro0.selectedIndex == 1)
+						{
+							remoteObject.listaFaltasPorDataProfessor(dataDe, dataAte, alprofessornome.getItemAt(comboFiltro1.selectedIndex).toString(), alprofessorsobrenome.getItemAt(comboFiltro1.selectedIndex).toString());
+						}
+						//Data por Disciplina
+						if (comboFiltro0.selectedIndex == 2)
+						{
+							remoteObject.listaFaltasPorDataDisciplina(dataDe, dataAte, aldisciplina.getItemAt(comboFiltro1.selectedIndex).toString());
+						}
+						
+						if (comboFiltro0.selectedIndex == 3)
+						{
+							remoteObject.listaFaltasPorData(dataDe, dataAte);
+						}
+					}
+					if (comboFaltasPor.selectedIndex == 3)
+					{
+						var professor_nome:String = alprofessornome.getItemAt(comboFiltro..selectedIndex).toString();
+						var professor_sobrenome:String = alprofessorsobrenome.getItemAt(comboFiltro.selectedIndex).toString();
+						remoteObject.listaFaltasPorProfessor(professor_nome, professor_sobrenome);
+					}
+					if (comboFaltasPor.selectedIndex == 4)
+					{
+						var disciplina:String = aldisciplina.getItemAt(comboFiltro.selectedIndex).toString();
+						remoteObject.listaFaltasPorDisciplina(disciplina);
+					}
+					if (comboFaltasPor.selectedIndex == 5)
+					{
+						var aluno_nome:String = alalunonome.getItemAt(comboFiltro.selectedIndex).toString();
+						var aluno_sobrenome:String = alalunosobrenome.getItemAt(comboFiltro.selectedIndex).toString();
+						remoteObject.listaFaltasPorAluno(aluno_nome, aluno_sobrenome);
+					}
+				}
+				//Relatórios Comuns
+				if (tabNavigator.selectedChild.label== "Relatórios Comuns")
+				{
+					//Professores
+					if (comboRelatoriosComuns.selectedIndex == 0)
+					{
+						//Por Curso
+						if (comboTipoFiltroRelatoriosComuns.selectedIndex == 0)
+						{
+							
+							remoteObject.listaProfessorPorCurso(alcurso.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString());
+						}
+						//Por Disciplina
+						if (comboTipoFiltroRelatoriosComuns.selectedIndex == 1)
+						{
+							
+							remoteObject.listaProfessorPorDisciplina(aldisciplina.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString());
+						}
+					}
+					
+					//Disciplinas
+					if (comboRelatoriosComuns.selectedIndex == 1)
+					{
+						//Por Curso
+						if (comboTipoFiltroRelatoriosComuns.selectedIndex == 0)
+						{
+							remoteObject.listaDisciplinaPorCurso(alcurso.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString());
+						}
+						//Por Professor
+						if (comboTipoFiltroRelatoriosComuns.selectedIndex == 1)
+						{
+							
+							remoteObject.listaDisciplinaProfessores(alprofessornome.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString(), alprofessorsobrenome.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString());
+							
+						}
+						
+					}
+					
+					//Alunos
+					if (comboRelatoriosComuns.selectedIndex == 2)
+					{
+						//Por Curso
+						if (comboTipoFiltroRelatoriosComuns.selectedIndex == 0)
+						{
+							remoteObject.listaAlunoPorCurso(alcurso.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString());
+						}
+						//Por Turma
+						if (comboTipoFiltroRelatoriosComuns.selectedIndex == 1)
+						{
+							remoteObject.listaAlunosPorTurma(parseInt(alturma.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString()));
+							
+						}
+						
+						//Por Professor
+						if (comboTipoFiltroRelatoriosComuns.selectedIndex == 2)
+						{
+							
+							remoteObject.listaAlunoPorProfessor(alprofessornome.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString(), alprofessorsobrenome.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString());
+							
+						}
+						
+						//Por Disciplina
+						if (comboTipoFiltroRelatoriosComuns.selectedIndex == 3)
+						{
+							
+							remoteObject.listaAlunosPorDisciplina(aldisciplina.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString());
+						}
+						
+						
+					}
+					
+					//Turma
+					if (comboRelatoriosComuns.selectedIndex == 3)
+					{
+						//Por Curso
+						if (comboTipoFiltroRelatoriosComuns.selectedIndex == 0)
+						{
+							remoteObject.listaTurmasPorCurso(alcurso.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString());
+						}
+						//Por Aluno
+						if (comboTipoFiltroRelatoriosComuns.selectedIndex == 1)
+						{
+							remoteObject.listaTurmaPorAluno(alalunonome.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString(), alalunosobrenome.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString());
+							
+						}
+						
+						//Por Professor
+						if (comboTipoFiltroRelatoriosComuns.selectedIndex == 2)
+						{
+							
+							remoteObject.listaTurmaPorProfessor(alprofessornome.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString(), alprofessorsobrenome.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString());
+							
+						}
+						
+						//Por Disciplina
+						if (comboTipoFiltroRelatoriosComuns.selectedIndex == 3)
+						{
+							
+							remoteObject.listaTurmaPorDisciplina(aldisciplina.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString());
+						}
+						
+						
+					}
+					
+					//Salas
+					if (comboRelatoriosComuns.selectedIndex == 4)
+					{
+						
+						//Por Turma
+						if (comboTipoFiltroRelatoriosComuns.selectedIndex == 0)
+						{
+							remoteObject.listaSalaPorTurma(parseInt(alturma.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString()));
+							
+						}
+						
+						//Por Professor
+						if (comboTipoFiltroRelatoriosComuns.selectedIndex == 1)
+						{
+							
+							remoteObject.listaSalaPorProfessor(alprofessornome.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString(), alprofessorsobrenome.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString());
+							
+						}
+						
+						//Por Disciplina
+						if (comboTipoFiltroRelatoriosComuns.selectedIndex == 2)
+						{
+							
+							remoteObject.listaSalaPorDisciplina(aldisciplina.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString());
+						}
+						
+						
+					}
+				}
+				
+				//Frequência
+				if (tabNavigator.selectedChild.label== "Frequência")
+				{
+					remoteObject.listaAulasPorTurma(parseInt(campoTurmaFrequencia.text));
+					remoteObject.listaBoletim(parseInt(campoTurmaFrequencia.text));
+				}
+				
+				
+			}
+			
+			protected function resultadoFaltasPorTurma(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				CursorManager.removeBusyCursor();
+				var cont:int;
+				var falta:Falta;
+				var ar_ :Array = new Array();
+				al = event.result as ArrayCollection;
+				alfalta.removeAll();
+				for (cont = 0; cont < al.length; cont++)
+				{
+					falta = al.getItemAt(cont) as Falta;
+					alfalta.addItem(falta);
+				}
+				
+				var janela:PreviewReport = new PreviewReport();
+				janela.width = this.parent.width;
+				janela.height = this.parent.height;
+				var dp:DPTemplatePadrao= new DPTemplatePadrao();
+				dp.tabela = alfalta;
+				dp.identificador = "Turma";
+				dp.label = "FALTA POR TURMAS";
+				dp.turmaCodigo = alturma.getItemAt(comboFiltro.selectedIndex).toString();
+				dp.total = alfalta.length.toString();
+				var doc:Document = new Document( new TemplatePadrao(), dp, PaperFormat.A4);
+				PopUpManager.addPopUp(janela, DisplayObject(this.parentApplication), true);
+				PopUpManager.centerPopUp(janela);
+				janela.preview.doc = doc;
+				
+			}
+			
+			protected function resultadoFaltasPorCurso(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stu
+				CursorManager.removeBusyCursor();
+				var cont:int;
+				var falta:Falta;
+				var ar_ :Array = new Array();
+				al = event.result as ArrayCollection;
+				alfalta.removeAll();
+				for (cont = 0; cont < al.length; cont++)
+				{
+					falta = al.getItemAt(cont) as Falta;
+					alfalta.addItem(falta);
+				}
+				
+				var janela:PreviewReport = new PreviewReport();
+				janela.width = this.parent.width;
+				janela.height = this.parent.height;
+				var dp:DPTemplatePadrao= new DPTemplatePadrao();
+				dp.tabela = alfalta;
+				dp.identificador = "Curso";
+				dp.label = "FALTA POR CURSO";
+				dp.turmaCodigo = alcurso.getItemAt(comboFiltro.selectedIndex).toString();
+				dp.total = alfalta.length.toString();
+				var doc:Document = new Document( new TemplatePadrao(), dp, PaperFormat.A4);
+				PopUpManager.addPopUp(janela, DisplayObject(this.parentApplication), true);
+				PopUpManager.centerPopUp(janela);
+				janela.preview.doc = doc;
+				
+			}
+			
+			
+			
+			
+			protected function resultadoCursos(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var cont:int;
+				var curso:Curso;
+				alcurso.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; al.length; cont++)
+				{
+					curso = al.getItemAt(cont) as Curso;
+					alcurso.addItem(curso.nome);
+					alcurso1.addItem(curso);
+				}
+			}
+			
+			
+			protected function resultadoFaltaPorData(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				// TODO Auto-generated method stu
+				CursorManager.removeBusyCursor();
+				var cont:int;
+				var falta:Falta;
+				var ar_ :Array = new Array();
+				al = event.result as ArrayCollection;
+				alfalta.removeAll();
+				for (cont = 0; cont < al.length; cont++)
+				{
+					falta = al.getItemAt(cont) as Falta;
+					alfalta.addItem(falta);
+				}
+				
+				var janela:PreviewReport = new PreviewReport();
+				janela.width = this.parent.width;
+				janela.height = this.parent.height;
+				var dp:DPTemplatePadrao= new DPTemplatePadrao();
+				dp.tabela = alfalta;
+				dp.identificador = "Data";
+				dp.label = "FALTA POR DATA";
+				dp.turmaCodigo = dateFormat.format(campoDe.selectedDate) + " a " + dateFormat.format(campoAte.selectedDate);
+				dp.total = alfalta.length.toString();
+				var doc:Document = new Document( new TemplatePadrao(), dp, PaperFormat.A4);
+				PopUpManager.addPopUp(janela, DisplayObject(this.parentApplication), true);
+				PopUpManager.centerPopUp(janela);
+				janela.preview.doc = doc;
+			}
+			
+			protected function carregaTurmaRendimento(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				remoteObject.listaTurmas();
+			}
+			
+			
+			protected function resultadoTurmas(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var cont:int;
+				var turma:Turma;
+				alturma.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; al.length; cont++)
+				{
+					turma = al.getItemAt(cont) as Turma;
+					alturma.addItem(turma.codigoTurma);
+				}
+			}
+			
+			protected function resultadoSalas(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var cont:int;
+				var sala:Sala;
+				alsala.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; al.length; cont++)
+				{
+					sala = al.getItemAt(cont) as Sala;
+					alsala.addItem(sala);
+				}
+			}
+			
+			protected function resultadoAlunos(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var cont:int;
+				var aluno:Aluno;
+				var nomeSobrenome:String;
+				alaluno.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; al.length; cont++)
+				{
+					aluno = al.getItemAt(cont) as Aluno;
+					alnomeAluno.addItem(aluno.nome);
+					alaluno1.addItem(aluno);
+					alalunonome.addItem(aluno.nome);
+					alalunosobrenome.addItem(aluno.sobrenome);
+					alsobrenomeAluno.addItem(aluno.sobrenome);
+					alcodigoAluno.addItem(aluno.codigoAluno);
+					nomeSobrenome = aluno.nome + " " + aluno.sobrenome;
+					alnomesobrenome.addItem(nomeSobrenome);
+					alalunonomesobrenome.addItem(nomeSobrenome);
+				}
+			}
+			
+			protected function resultadoRendimento(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var boletim:Boletim;
+				boletim = event.result as Boletim;
+				
+				var janela:PreviewReport = new PreviewReport();
+				janela.width = this.parent.width;
+				janela.height = this.parent.height;
+				var dp:DPTemplatePadrao= new DPTemplatePadrao();
+				//dp.boletim = boletim;
+				//dp.identificador = "Data";
+				//dp.label = "FALTA POR DATA";
+				//dp.turmaCodigo = dateFormat.format((ti as DateField).selectedDate) + " a " + dateFormat.format((tiAte as DateField).selectedDate);
+				dp.total = "1";
+				var doc:Document = new Document( new TemplateRendimento(), dp, PaperFormat.A4);
+				PopUpManager.addPopUp(janela, DisplayObject(this.parentApplication), true);
+				PopUpManager.centerPopUp(janela);
+				janela.preview.doc = doc;
+			}
+			
+			protected function resultadoProfessoresPorCurso(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				CursorManager.removeBusyCursor();
+				var cont:int;
+				var professor:Professor;
+				var nome:String = "";
+				alprofessor.removeAll();
+				alprofessornomesobrenome.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; cont < al.length; cont++)
+				{
+					professor = al.getItemAt(cont) as Professor;
+					nome = professor.nome + " " + professor.sobrenome;
+					alprofessornomesobrenome.addItem(nome);
+					alprofessornome.addItem(professor.nome);
+					alprofessorsobrenome.addItem(professor.sobrenome);
+					alprofessor.addItem(professor);
+				}
+				
+				var janela:PreviewReport = new PreviewReport();
+				janela.width = this.parent.width;
+				janela.height = this.parent.height;
+				var dp:DPTemplatePadrao= new DPTemplatePadrao();
+				dp.tabela = alprofessor;
+				dp.identificador = "Curso";
+				dp.label = "PROFESSORES POR CURSO";
+				dp.turmaCodigo = alcurso.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString();
+				dp.total = alprofessor.length.toString();
+				var doc:Document = new Document( new TemplatePessoa(), dp, PaperFormat.A4);
+				PopUpManager.addPopUp(janela, DisplayObject(this.parentApplication), true);
+				PopUpManager.centerPopUp(janela);
+				janela.preview.doc = doc;
+			}
+			
+			protected function resultadoFaltaPorProfessor(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				CursorManager.removeBusyCursor();
+				var cont:int;
+				var falta:Falta;
+				var ar_ :Array = new Array();
+				al = event.result as ArrayCollection;
+				alfalta.removeAll();
+				for (cont = 0; cont < al.length; cont++)
+				{
+					falta = al.getItemAt(cont) as Falta;
+					alfalta.addItem(falta);
+				}
+				
+				var janela:PreviewReport = new PreviewReport();
+				janela.width = this.parent.width;
+				janela.height = this.parent.height;
+				var dp:DPTemplatePadrao= new DPTemplatePadrao();
+				dp.tabela = alfalta;
+				dp.identificador = "Professor";
+				dp.label = "FALTA POR PROFESSOR";
+				dp.turmaCodigo = alprofessornomesobrenome.getItemAt(comboFiltro.selectedIndex).toString();
+				dp.total = alfalta.length.toString();
+				var doc:Document = new Document( new TemplatePadrao(), dp, PaperFormat.A4);
+				PopUpManager.addPopUp(janela, DisplayObject(this.parentApplication), true);
+				PopUpManager.centerPopUp(janela);
+				janela.preview.doc = doc;
+			}
+			
+			protected function resultadoFaltasPorDisciplina(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				CursorManager.removeBusyCursor();
+				var cont:int;
+				var falta:Falta;
+				var ar_ :Array = new Array();
+				al = event.result as ArrayCollection;
+				alfalta.removeAll();
+				for (cont = 0; cont < al.length; cont++)
+				{
+					falta = al.getItemAt(cont) as Falta;
+					alfalta.addItem(falta);
+				}
+				
+				var janela:PreviewReport = new PreviewReport();
+				janela.width = this.parent.width;
+				janela.height = this.parent.height;
+				var dp:DPTemplatePadrao= new DPTemplatePadrao();
+				dp.tabela = alfalta;
+				dp.identificador = "Disciplina";
+				dp.label = "FALTA POR DISCIPLINA";
+				dp.turmaCodigo = aldisciplina.getItemAt(comboFiltro.selectedIndex).toString();
+				dp.total = alfalta.length.toString();
+				var doc:Document = new Document( new TemplatePadrao(), dp, PaperFormat.A4);
+				PopUpManager.addPopUp(janela, DisplayObject(this.parentApplication), true);
+				PopUpManager.centerPopUp(janela);
+				janela.preview.doc = doc;
+				
+			}
+			
+			protected function resultadoDisciplinas(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var cont:int;
+				var disciplina:Disciplina;
+				aldisciplina.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; al.length; cont++)
+				{
+					disciplina = al.getItemAt(cont) as Disciplina;
+					aldisciplina.addItem(disciplina.nome);
+					aldisciplina1.addItem(disciplina);
+				}
+			}
+			
+			protected function resultadoFaltaPorAluno(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				CursorManager.removeBusyCursor();
+				var cont:int;
+				var falta:Falta;
+				var ar_ :Array = new Array();
+				al = event.result as ArrayCollection;
+				alfalta.removeAll();
+				for (cont = 0; cont < al.length; cont++)
+				{
+					falta = al.getItemAt(cont) as Falta;
+					alfalta.addItem(falta);
+				}
+				
+				var janela:PreviewReport = new PreviewReport();
+				janela.width = this.parent.width;
+				janela.height = this.parent.height;
+				var dp:DPTemplatePadrao= new DPTemplatePadrao();
+				dp.tabela = alfalta;
+				dp.identificador = "Aluno";
+				dp.label = "FALTA POR ALUNO";
+				dp.turmaCodigo = alalunonomesobrenome.getItemAt(comboFiltro.selectedIndex).toString();
+				dp.total = alfalta.length.toString();
+				var doc:Document = new Document( new TemplatePadrao(), dp, PaperFormat.A4);
+				PopUpManager.addPopUp(janela, DisplayObject(this.parentApplication), true);
+				PopUpManager.centerPopUp(janela);
+				janela.preview.doc = doc;
+			}
+			
+			protected function resultadoAlunos1(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var cont:int;
+				var aluno:Aluno;
+				var nomeSobrenome:String;
+				alaluno1.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; al.length; cont++)
+				{
+					aluno = al.getItemAt(cont) as Aluno;
+					alaluno1.addItem(aluno);
+					alalunonome.addItem(aluno.nome);
+					alalunosobrenome.addItem(aluno.sobrenome);
+					nomeSobrenome = aluno.nome + " " + aluno.sobrenome;
+					alalunonomesobrenome.addItem(nomeSobrenome);
+				}
+			}
+			
+			
+			
+			protected function resultadoAdministradores(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				CursorManager.removeBusyCursor();
+				var cont:int;
+				var administrador:Administrador;
+				var ar_ :Array = new Array();
+				al = event.result as ArrayCollection;
+				aladministrador.removeAll();
+				for (cont = 0; cont < al.length; cont++)
+				{
+					administrador = al.getItemAt(cont) as Administrador;
+					aladministrador.addItem(administrador);
+				}
+				
+				var janela:PreviewReport = new PreviewReport();
+				janela.width = this.parent.width;
+				janela.height = this.parent.height;
+				var dp:DPTemplatePadrao= new DPTemplatePadrao();
+				dp.tabela = alfalta;
+				//dp.identificador = "Administrador";
+				dp.label = "ADMINISTRADORES";
+				//dp.turmaCodigo = aldisciplina.getItemAt((ti as ComboBox).selectedIndex).toString();
+				dp.total = alfalta.length.toString();
+				var doc:Document = new Document( new TemplatePadrao(), dp, PaperFormat.A4);
+				PopUpManager.addPopUp(janela, DisplayObject(this.parentApplication), true);
+				PopUpManager.centerPopUp(janela);
+				janela.preview.doc = doc;
+			}
+			
+			protected function resultadoProfessoresPorDisciplina(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				CursorManager.removeBusyCursor();
+				var cont:int;
+				var professor:Professor;
+				var nome:String = "";
+				alprofessor.removeAll();
+				alprofessornomesobrenome.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; cont < al.length; cont++)
+				{
+					professor = al.getItemAt(cont) as Professor;
+					nome = professor.nome + " " + professor.sobrenome;
+					alprofessornomesobrenome.addItem(nome);
+					alprofessornome.addItem(professor.nome);
+					alprofessorsobrenome.addItem(professor.sobrenome);
+					alprofessor.addItem(professor);
+				}
+				
+				var janela:PreviewReport = new PreviewReport();
+				janela.width = this.parent.width;
+				janela.height = this.parent.height;
+				var dp:DPTemplatePadrao= new DPTemplatePadrao();
+				dp.tabela = alprofessor;
+				dp.identificador = "Disciplina";
+				dp.label = "PROFESSORES POR DISCIPLINA";
+				dp.turmaCodigo = aldisciplina.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString();
+				dp.total = alprofessor.length.toString();
+				var doc:Document = new Document( new TemplatePessoa(), dp, PaperFormat.A4);
+				PopUpManager.addPopUp(janela, DisplayObject(this.parentApplication), true);
+				PopUpManager.centerPopUp(janela);
+				janela.preview.doc = doc;
+				
+			}
+			
+			protected function resultadoDisciplinaPorCurso(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				CursorManager.removeBusyCursor();
+				var cont:int;
+				var disciplina:Disciplina;
+				var nome:String = "";
+				aldisciplina1.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; cont < al.length; cont++)
+				{
+					disciplina = al.getItemAt(cont) as Disciplina;
+					aldisciplina1.addItem(disciplina);
+				}
+				
+				var janela:PreviewReport = new PreviewReport();
+				janela.width = this.parent.width;
+				janela.height = this.parent.height;
+				var dp:DPTemplatePadrao= new DPTemplatePadrao();
+				dp.tabela = aldisciplina1;
+				dp.identificador = "Curso";
+				dp.label = "DISCIPLINAS POR CURSO";
+				dp.turmaCodigo = alcurso.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString();
+				dp.total = aldisciplina1.length.toString();
+				var doc:Document = new Document( new TemplateDisciplina(), dp, PaperFormat.A4);
+				PopUpManager.addPopUp(janela, DisplayObject(this.parentApplication), true);
+				PopUpManager.centerPopUp(janela);
+				janela.preview.doc = doc;
+				
+			}
+			
+			protected function resultadoDisciplinaPorProfessor(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				CursorManager.removeBusyCursor();
+				var cont:int;
+				var disciplina:Disciplina;
+				var nome:String = "";
+				aldisciplina1.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; cont < al.length; cont++)
+				{
+					disciplina = al.getItemAt(cont) as Disciplina;
+					aldisciplina1.addItem(disciplina);
+				}
+				
+				var janela:PreviewReport = new PreviewReport();
+				janela.width = this.parent.width;
+				janela.height = this.parent.height;
+				var dp:DPTemplatePadrao= new DPTemplatePadrao();
+				dp.tabela = aldisciplina1;
+				dp.identificador = "Professor";
+				dp.label = "DISCIPLINAS POR PROFESSOR";
+				dp.turmaCodigo = alprofessornomesobrenome.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString();
+				dp.total = aldisciplina1.length.toString();
+				var doc:Document = new Document( new TemplateDisciplina(), dp, PaperFormat.A4);
+				PopUpManager.addPopUp(janela, DisplayObject(this.parentApplication), true);
+				PopUpManager.centerPopUp(janela);
+				janela.preview.doc = doc;
+				
+			}
+			
+			
+			protected function novoCampoFiltro(event:IndexChangeEvent):void
+			{
+				// TODO Auto-generated method stub
+				//Professores
+				if (comboRelatoriosComuns.selectedIndex == 0)
+				{
+					//Por Curso
+					if (comboTipoFiltroRelatoriosComuns.selectedIndex == 0)
+					{
+						comboFiltroRelatoriosComuns.selectedIndex = -1;
+						remoteObject.listaCursos();
+						comboFiltroRelatoriosComuns.dataProvider = alcurso;
+					}
+					
+					//Por Disciplina
+					if (comboTipoFiltroRelatoriosComuns.selectedIndex == 1)
+					{
+						comboFiltroRelatoriosComuns.selectedIndex = -1;
+						comboFiltroRelatoriosComuns.selectedIndex = -1;
+						remoteObject.listaDisciplinas();
+						comboFiltroRelatoriosComuns.dataProvider = aldisciplina;
+					}
+					
+				}
+				
+				//Disciplinas
+				if (comboRelatoriosComuns.selectedIndex == 1)
+				{
+					//Por Curso
+					if (comboTipoFiltroRelatoriosComuns.selectedIndex == 0)
+					{
+						comboFiltroRelatoriosComuns.selectedIndex = -1;
+						remoteObject.listaCursos();
+						comboFiltroRelatoriosComuns.dataProvider = alcurso;
+					}
+					
+					//Por Professor
+					if (comboTipoFiltroRelatoriosComuns.selectedIndex == 1)
+					{
+						comboFiltroRelatoriosComuns.selectedIndex = -1;
+						remoteObject.listaProfessores();
+						comboFiltroRelatoriosComuns.dataProvider = alprofessornomesobrenome;
+					}
+				}
+				
+				//Alunos
+				if (comboRelatoriosComuns.selectedIndex == 2)
+				{
+					//Por Curso
+					if (comboTipoFiltroRelatoriosComuns.selectedIndex == 0)
+					{
+						comboFiltroRelatoriosComuns.selectedIndex = -1;
+						remoteObject.listaCursos();
+						comboFiltroRelatoriosComuns.dataProvider = alcurso;
+					}
+					
+					//Por Turma
+					if (comboTipoFiltroRelatoriosComuns.selectedIndex == 1)
+					{
+						comboFiltroRelatoriosComuns.selectedIndex = -1;
+						remoteObject.listaTurmas();
+						comboFiltroRelatoriosComuns.dataProvider = alturma;
+					}
+					
+					//Por Professor
+					if (comboTipoFiltroRelatoriosComuns.selectedIndex == 2)
+					{
+						comboFiltroRelatoriosComuns.selectedIndex = -1;
+						remoteObject.listaProfessores();
+						comboFiltroRelatoriosComuns.dataProvider = alprofessornomesobrenome;
+					}
+					
+					//Por Disciplina
+					if (comboTipoFiltroRelatoriosComuns.selectedIndex == 3)
+					{
+						comboFiltroRelatoriosComuns.selectedIndex = -1;
+						remoteObject.listaDisciplinas();
+						comboFiltroRelatoriosComuns.dataProvider = aldisciplina;
+					}
+				}
+				
+				//Turma
+				if (comboRelatoriosComuns.selectedIndex == 3)
+				{
+					//Por Curso
+					if (comboTipoFiltroRelatoriosComuns.selectedIndex == 0)
+					{
+						comboFiltroRelatoriosComuns.selectedIndex = -1;
+						remoteObject.listaCursos();
+						comboFiltroRelatoriosComuns.dataProvider = alcurso;
+					}
+					
+					//Por Aluno
+					if (comboTipoFiltroRelatoriosComuns.selectedIndex == 1)
+					{
+						comboFiltroRelatoriosComuns.selectedIndex = -1;
+						remoteObject.listaAlunos();
+						comboFiltroRelatoriosComuns.dataProvider = alalunonomesobrenome;
+					}
+					
+					//Por Professor
+					if (comboTipoFiltroRelatoriosComuns.selectedIndex == 2)
+					{
+						comboFiltroRelatoriosComuns.selectedIndex = -1;
+						remoteObject.listaProfessores();
+						comboFiltroRelatoriosComuns.dataProvider = alprofessornomesobrenome;
+					}
+					
+					//Por Disciplina
+					if (comboTipoFiltroRelatoriosComuns.selectedIndex == 3)
+					{
+						comboFiltroRelatoriosComuns.selectedIndex = -1;
+						remoteObject.listaDisciplinas();
+						comboFiltroRelatoriosComuns.dataProvider = aldisciplina;
+					}
+				}
+				
+				//Salas
+				if (comboRelatoriosComuns.selectedIndex == 4)
+				{
+					
+					//Por Turma
+					if (comboTipoFiltroRelatoriosComuns.selectedIndex == 0)
+					{
+						comboFiltroRelatoriosComuns.selectedIndex = -1;
+						remoteObject.listaTurmas();
+						comboFiltroRelatoriosComuns.dataProvider = alturma;
+					}
+					
+					//Por Professor
+					if (comboTipoFiltroRelatoriosComuns.selectedIndex == 1)
+					{
+						comboFiltroRelatoriosComuns.selectedIndex = -1;
+						remoteObject.listaProfessores();
+						comboFiltroRelatoriosComuns.dataProvider = alprofessornomesobrenome;
+					}
+					
+					//Por Disciplina
+					if (comboTipoFiltroRelatoriosComuns.selectedIndex == 2)
+					{
+						comboFiltroRelatoriosComuns.selectedIndex = -1;
+						remoteObject.listaDisciplinas();
+						comboFiltroRelatoriosComuns.dataProvider = aldisciplina;
+					}
+				}
+			}
+			
+			protected function resultadoProfessores(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var cont:int;
+				var professor:Professor;
+				var nome:String = "";
+				alprofessor.removeAll();
+				alprofessornomesobrenome.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; cont < al.length; cont++)
+				{
+					professor = al.getItemAt(cont) as Professor;
+					nome = professor.nome + " " + professor.sobrenome;
+					alprofessornomesobrenome.addItem(nome);
+					alprofessornome.addItem(professor.nome);
+					alprofessorsobrenome.addItem(professor.sobrenome);
+				}
+			}
+			
+			protected function resultadoAlunosPorTurma(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				// TODO Auto-generated method stub
+				CursorManager.removeBusyCursor();
+				var cont:int;
+				var aluno:Aluno;
+				var nome:String = "";
+				alaluno.removeAll();
+				alalunonomesobrenome.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; cont < al.length; cont++)
+				{
+					aluno = al.getItemAt(cont) as Aluno;
+					nome = aluno.nome + " " + aluno.sobrenome;
+					alalunonomesobrenome.addItem(nome);
+					alalunonome.addItem(aluno.nome);
+					alalunosobrenome.addItem(aluno.sobrenome);
+					alaluno.addItem(aluno);
+				}
+				
+				var janela:PreviewReport = new PreviewReport();
+				janela.width = this.parent.width;
+				janela.height = this.parent.height;
+				var dp:DPTemplatePadrao= new DPTemplatePadrao();
+				dp.tabela = alaluno;
+				dp.identificador = "Turma";
+				dp.label = "ALUNOS POR TURMA";
+				dp.turmaCodigo = alturma.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString();
+				dp.total = alaluno.length.toString();
+				var doc:Document = new Document( new TemplatePessoa(), dp, PaperFormat.A4);
+				PopUpManager.addPopUp(janela, DisplayObject(this.parentApplication), true);
+				PopUpManager.centerPopUp(janela);
+				janela.preview.doc = doc;
+			}
+			
+			protected function resultadoAlunoPorCurso(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				CursorManager.removeBusyCursor();
+				var cont:int;
+				var aluno:Aluno;
+				var nome:String = "";
+				alaluno.removeAll();
+				alalunonomesobrenome.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; cont < al.length; cont++)
+				{
+					aluno = al.getItemAt(cont) as Aluno;
+					nome = aluno.nome + " " + aluno.sobrenome;
+					alalunonomesobrenome.addItem(nome);
+					alalunonome.addItem(aluno.nome);
+					alalunosobrenome.addItem(aluno.sobrenome);
+					alaluno.addItem(aluno);
+				}
+				
+				var janela:PreviewReport = new PreviewReport();
+				janela.width = this.parent.width;
+				janela.height = this.parent.height;
+				var dp:DPTemplatePadrao= new DPTemplatePadrao();
+				dp.tabela = alaluno;
+				dp.identificador = "Curso";
+				dp.label = "ALUNOS POR CURSO";
+				dp.turmaCodigo = alcurso.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString();
+				dp.total = alaluno.length.toString();
+				var doc:Document = new Document( new TemplatePessoa(), dp, PaperFormat.A4);
+				PopUpManager.addPopUp(janela, DisplayObject(this.parentApplication), true);
+				PopUpManager.centerPopUp(janela);
+				janela.preview.doc = doc;
+			}
+			
+			protected function resultadoAlunosPorProfessor(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				CursorManager.removeBusyCursor();
+				var cont:int;
+				var aluno:Aluno;
+				var nome:String = "";
+				alaluno.removeAll();
+				alalunonomesobrenome.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; cont < al.length; cont++)
+				{
+					aluno = al.getItemAt(cont) as Aluno;
+					nome = aluno.nome + " " + aluno.sobrenome;
+					alalunonomesobrenome.addItem(nome);
+					alalunonome.addItem(aluno.nome);
+					alalunosobrenome.addItem(aluno.sobrenome);
+					alaluno.addItem(aluno);
+				}
+				
+				var janela:PreviewReport = new PreviewReport();
+				janela.width = this.parent.width;
+				janela.height = this.parent.height;
+				var dp:DPTemplatePadrao= new DPTemplatePadrao();
+				dp.tabela = alaluno;
+				dp.identificador = "Professor";
+				dp.label = "ALUNOS POR PROFESSOR";
+				dp.turmaCodigo = alprofessornomesobrenome.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString();
+				dp.total = alaluno.length.toString();
+				var doc:Document = new Document( new TemplatePessoa(), dp, PaperFormat.A4);
+				PopUpManager.addPopUp(janela, DisplayObject(this.parentApplication), true);
+				PopUpManager.centerPopUp(janela);
+				janela.preview.doc = doc;
+			}
+			
+			protected function resultadoAlunosPorDisciplina(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				CursorManager.removeBusyCursor();
+				var cont:int;
+				var aluno:Aluno;
+				var nome:String = "";
+				alaluno.removeAll();
+				alalunonomesobrenome.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; cont < al.length; cont++)
+				{
+					aluno = al.getItemAt(cont) as Aluno;
+					nome = aluno.nome + " " + aluno.sobrenome;
+					alalunonomesobrenome.addItem(nome);
+					alalunonome.addItem(aluno.nome);
+					alalunosobrenome.addItem(aluno.sobrenome);
+					alaluno.addItem(aluno);
+				}
+				
+				var janela:PreviewReport = new PreviewReport();
+				janela.width = this.parent.width;
+				janela.height = this.parent.height;
+				var dp:DPTemplatePadrao= new DPTemplatePadrao();
+				dp.tabela = alaluno;
+				dp.identificador = "Disciplina";
+				dp.label = "ALUNOS POR DISCIPLINA";
+				dp.turmaCodigo = aldisciplina.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString();
+				dp.total = alaluno.length.toString();
+				var doc:Document = new Document( new TemplateDisciplina(), dp, PaperFormat.A4);
+				PopUpManager.addPopUp(janela, DisplayObject(this.parentApplication), true);
+				PopUpManager.centerPopUp(janela);
+				janela.preview.doc = doc;
+			}
+			
+			protected function resultadoTurmaPorCurso(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				CursorManager.removeBusyCursor();
+				var cont:int;
+				var turma:Turma;
+				var nome:String = "";
+				alturma.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; cont < al.length; cont++)
+				{
+					turma = al.getItemAt(cont) as Turma;
+					alturma.addItem(turma);
+				}
+				
+				var janela:PreviewReport = new PreviewReport();
+				janela.width = this.parent.width;
+				janela.height = this.parent.height;
+				var dp:DPTemplatePadrao= new DPTemplatePadrao();
+				dp.tabela = alturma;
+				dp.identificador = "Curso";
+				dp.label = "TURMA POR CURSO";
+				dp.turmaCodigo = alcurso.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString();
+				dp.total = alturma.length.toString();
+				var doc:Document = new Document( new TemplateTurma(), dp, PaperFormat.A4);
+				PopUpManager.addPopUp(janela, DisplayObject(this.parentApplication), true);
+				PopUpManager.centerPopUp(janela);
+				janela.preview.doc = doc;
+				
+			}
+			
+			protected function resultadoTurmaPorAluno(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				CursorManager.removeBusyCursor();
+				var cont:int;
+				var turma:Turma;
+				var nome:String = "";
+				alturma.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; cont < al.length; cont++)
+				{
+					turma = al.getItemAt(cont) as Turma;
+					alturma.addItem(turma);
+				}
+				
+				var janela:PreviewReport = new PreviewReport();
+				janela.width = this.parent.width;
+				janela.height = this.parent.height;
+				var dp:DPTemplatePadrao= new DPTemplatePadrao();
+				dp.tabela = alturma;
+				dp.identificador = "Aluno";
+				dp.label = "TURMA POR ALUNO";
+				dp.turmaCodigo = alalunonomesobrenome.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString();
+				dp.total = alturma.length.toString();
+				var doc:Document = new Document( new TemplateTurma(), dp, PaperFormat.A4);
+				PopUpManager.addPopUp(janela, DisplayObject(this.parentApplication), true);
+				PopUpManager.centerPopUp(janela);
+				janela.preview.doc = doc;
+			}
+			
+			protected function resultadoTurmaPorProfessor(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				CursorManager.removeBusyCursor();
+				var cont:int;
+				var turma:Turma;
+				var nome:String = "";
+				alturma.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; cont < al.length; cont++)
+				{
+					turma = al.getItemAt(cont) as Turma;
+					alturma.addItem(turma);
+				}
+				
+				var janela:PreviewReport = new PreviewReport();
+				janela.width = this.parent.width;
+				janela.height = this.parent.height;
+				var dp:DPTemplatePadrao= new DPTemplatePadrao();
+				dp.tabela = alturma;
+				dp.identificador = "Professor";
+				dp.label = "TURMA POR PROFESSOR";
+				dp.turmaCodigo = alprofessornomesobrenome.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString();
+				dp.total = alturma.length.toString();
+				var doc:Document = new Document( new TemplateTurma(), dp, PaperFormat.A4);
+				PopUpManager.addPopUp(janela, DisplayObject(this.parentApplication), true);
+				PopUpManager.centerPopUp(janela);
+				janela.preview.doc = doc;
+			}
+			
+			protected function resultadoTurmaPorDisciplina(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				// TODO Auto-generated method stub
+				CursorManager.removeBusyCursor();
+				var cont:int;
+				var turma:Turma;
+				var nome:String = "";
+				alturma.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; cont < al.length; cont++)
+				{
+					turma = al.getItemAt(cont) as Turma;
+					alturma.addItem(turma);
+				}
+				
+				var janela:PreviewReport = new PreviewReport();
+				janela.width = this.parent.width;
+				janela.height = this.parent.height;
+				var dp:DPTemplatePadrao= new DPTemplatePadrao();
+				dp.tabela = alturma;
+				dp.identificador = "Disciplina";
+				dp.label = "TURMA POR DISCIPLINA";
+				dp.turmaCodigo = aldisciplina.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString();
+				dp.total = alturma.length.toString();
+				var doc:Document = new Document( new TemplateTurma(), dp, PaperFormat.A4);
+				PopUpManager.addPopUp(janela, DisplayObject(this.parentApplication), true);
+				PopUpManager.centerPopUp(janela);
+				janela.preview.doc = doc;
+			}
+			
+			protected function resultadoSalaPorProfessor(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				CursorManager.removeBusyCursor();
+				var cont:int;
+				var sala:Sala;
+				var nome:String = "";
+				alsala.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; cont < al.length; cont++)
+				{
+					sala = al.getItemAt(cont) as Sala;
+					alsala.addItem(sala);
+				}
+				
+				var janela:PreviewReport = new PreviewReport();
+				janela.width = this.parent.width;
+				janela.height = this.parent.height;
+				var dp:DPTemplatePadrao= new DPTemplatePadrao();
+				dp.tabela = alsala;
+				dp.identificador = "Professor";
+				dp.label = "SALA POR PROFESSOR";
+				dp.turmaCodigo = alprofessornomesobrenome.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString();
+				dp.total = alsala.length.toString();
+				var doc:Document = new Document( new TemplateSala(), dp, PaperFormat.A4);
+				PopUpManager.addPopUp(janela, DisplayObject(this.parentApplication), true);
+				PopUpManager.centerPopUp(janela);
+				janela.preview.doc = doc;
+			}
+			
+			protected function resultadoSalaPorTurma(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				CursorManager.removeBusyCursor();
+				var cont:int;
+				var sala:Sala;
+				var nome:String = "";
+				alsala.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; cont < al.length; cont++)
+				{
+					sala = al.getItemAt(cont) as Sala;
+					alsala.addItem(sala);
+				}
+				
+				var janela:PreviewReport = new PreviewReport();
+				janela.width = this.parent.width;
+				janela.height = this.parent.height;
+				var dp:DPTemplatePadrao= new DPTemplatePadrao();
+				dp.tabela = alsala;
+				dp.identificador = "Turma";
+				dp.label = "SALA POR TURMA";
+				dp.turmaCodigo = alturma.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString();
+				dp.total = alsala.length.toString();
+				var doc:Document = new Document( new TemplateSala(), dp, PaperFormat.A4);
+				PopUpManager.addPopUp(janela, DisplayObject(this.parentApplication), true);
+				PopUpManager.centerPopUp(janela);
+				janela.preview.doc = doc;
+			}
+			
+			protected function resultadoSalaPorDisciplina(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				CursorManager.removeBusyCursor();
+				var cont:int;
+				var sala:Sala;
+				var nome:String = "";
+				alsala.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; cont < al.length; cont++)
+				{
+					sala = al.getItemAt(cont) as Sala;
+					alsala.addItem(sala);
+				}
+				
+				var janela:PreviewReport = new PreviewReport();
+				janela.width = this.parent.width;
+				janela.height = this.parent.height;
+				var dp:DPTemplatePadrao= new DPTemplatePadrao();
+				dp.tabela = alsala;
+				dp.identificador = "Disciplina";
+				dp.label = "SALA POR DISCIPLINA";
+				dp.turmaCodigo = aldisciplina.getItemAt(comboFiltroRelatoriosComuns.selectedIndex).toString();
+				dp.total = alturma.length.toString();
+				var doc:Document = new Document( new TemplateSala(), dp, PaperFormat.A4);
+				PopUpManager.addPopUp(janela, DisplayObject(this.parentApplication), true);
+				PopUpManager.centerPopUp(janela);
+				janela.preview.doc = doc;
+			}
+			
+			protected function listaCurso():void{
+				remoteObject.listaCursos();
+			}
+			
+			protected function carregaProfessor(event:IndexChangeEvent):void
+			{
+				// TODO Auto-generated method stub
+				comboProfessorFrequencia.selectedIndex = -1;
+				comboDisciplinaFrequencia.selectedIndex = -1;
+				campoTurmaFrequencia.text = "";
+				remoteObject.listaProfessorPorCursoFrequencia((alcurso.getItemAt(comboCursoFrequencia.selectedIndex).toString()));
+			}
+			
+			protected function carregaDisciplina(event:IndexChangeEvent):void
+			{
+				// TODO Auto-generated method stub
+				comboDisciplinaFrequencia.selectedIndex = -1;
+				campoTurmaFrequencia.text = "";
+				remoteObject.listaDisciplinaProfessoresFrequencia((alprofessornome.getItemAt(comboProfessorFrequencia.selectedIndex).toString()), (alprofessorsobrenome.getItemAt(comboProfessorFrequencia.selectedIndex).toString()));
+			}
+			
+			protected function carregaTurma(event:IndexChangeEvent):void
+			{
+				// TODO Auto-generated method stub
+				campoTurmaFrequencia.text = "";
+				remoteObject.getTurma(campoAnoFrequencia.text, (alcurso.getItemAt(comboCursoFrequencia.selectedIndex).toString()), alprofessornome.getItemAt(comboProfessorFrequencia.selectedIndex).toString(), alprofessorsobrenome.getItemAt(comboProfessorFrequencia.selectedIndex).toString(), (aldisciplina.getItemAt(comboDisciplinaFrequencia.selectedIndex).toString()));
+			}
+			
+			protected function resultadoTurmaFrequencia(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				
+				var turma:Turma = event.result as Turma;
+				campoTurmaFrequencia.text = turma.codigoTurma.toString();
+				
+			}
+			
+			protected function resultadoAula(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var cont:int;
+				var aula:Aula;
+				alaula.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; cont < al.length; cont++)
+				{
+					aula = al.getItemAt(cont) as Aula;
+					alaula.addItem(aula);
+				}
+				
+				
+			}
+			
+			protected function resultadoBoletim(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				CursorManager.removeBusyCursor();
+				var cont:int;
+				var boletim:Boletim;
+				alboletim.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; cont < al.length; cont++)
+				{
+					boletim = al.getItemAt(cont) as Boletim;
+					boletim.porcentagem = ((alaula.length - boletim.quantidadeFalta) * 100)/alaula.length + " %";
+					alboletim.addItem(boletim);
+				}
+				
+				var janela:PreviewReport = new PreviewReport();
+				janela.width = this.parent.width;
+				janela.height = this.parent.height;
+				var dp:DPTemplatePadrao= new DPTemplatePadrao();
+				dp.tabela = alboletim;
+				dp.identificador = "Total de " + alaula.length + " aulas dadas por " + boletim.turma.professor.nome + " " + boletim.turma.professor.sobrenome;
+				dp.turmaCodigo = "na disciplina " + boletim.turma.disciplina.nome + " para a turma " + boletim.turma.codigoTurma.toString();
+				dp.label = "PORCENTAGEM DE FREQUÊNCIA";
+				dp.total = alboletim.length.toString();
+				var doc:Document = new Document( new TemplateFrequencia(), dp, PaperFormat.A4);
+				PopUpManager.addPopUp(janela, DisplayObject(this.parentApplication), true);
+				PopUpManager.centerPopUp(janela);
+				janela.preview.doc = doc;
+				
+			}
+			
+			protected function carregaFiltroData(event:IndexChangeEvent):void
+			{
+				// TODO Auto-generated method stub
+				//Aluno
+				if (comboFiltro0.selectedIndex == 0)
+				{
+					remoteObject.listaAlunos();
+					comboFiltro1.selectedIndex = -1;
+					comboFiltro1.dataProvider = alalunonomesobrenome;
+				}
+				
+				//Professor
+				if (comboFiltro0.selectedIndex == 1)
+				{
+					remoteObject.listaProfessores();
+					comboFiltro1.selectedIndex = -1;
+					comboFiltro1.dataProvider = alprofessornomesobrenome;
+				}
+				
+				//Disciplina
+				if (comboFiltro0.selectedIndex == 2)
+				{
+					remoteObject.listaDisciplinas();
+					comboFiltro1.selectedIndex = -1;
+					comboFiltro1.dataProvider = aldisciplina;
+				}
+			}
+			
+			protected function LimpaTurmaFrequencia ():void
+			{
+				campoTurmaFrequencia.text = "";
+			}
+		]]>
+	</fx:Script>
+	<s:states>
+		<s:State name="State1"/>
+		<s:State name="DateField"/>
+	</s:states>
+	<fx:Declarations>
+		<s:RemoteObject id="remoteObject" destination="FlexRemoto" fault="falha(event)">
+			<s:method name="listaFaltasPorTurma" result="resultadoFaltasPorTurma(event)"  fault="falha(event)" />
+			<s:method name="listaFaltasPorCurso"  result="resultadoFaltasPorCurso(event)" fault="falha(event)" />
+			<s:method name="listaFaltasPorDisciplina" result="resultadoFaltasPorDisciplina(event)" fault="falha(event)" />
+			<s:method name="listaFaltasPorData"  result="resultadoFaltaPorData(event)" fault="falha(event)" />
+			<s:method name="listaFaltasPorDataAluno"  result="resultadoFaltaPorData(event)" fault="falha(event)" />
+			<s:method name="listaFaltasPorDataProfessor"  result="resultadoFaltaPorData(event)" fault="falha(event)" />
+			<s:method name="listaFaltasPorDataDisciplina"  result="resultadoFaltaPorData(event)" fault="falha(event)" />
+			<s:method name="listaFaltasPorProfessor" result="resultadoFaltaPorProfessor(event)" fault="falha(event)" />
+			<s:method name="listaFaltasPorAluno" result="resultadoFaltaPorAluno(event)" fault="falha(event)" />
+			<s:method name="listaCursos"  result="resultadoCursos(event)" fault="falha(event)" />
+			<s:method name="listaAlunos"   result="resultadoAlunos1(event)" fault="falha(event)" />
+			<s:method name="listaAdministradores" result="resultadoAdministradores(event)" fault="falha(event)" />
+			<s:method name="listaProfessores" result="resultadoProfessores(event)" fault="falha(event)" />
+			<s:method name="listaDisciplinas" result="resultadoDisciplinas(event)" fault="falha(event)" />
+			<s:method name="listaTurmas"   result="resultadoTurmas(event)" fault="falha(event)" />
+			<s:method name="listaSalas"   result="resultadoTurmas(event)" fault="falha(event)" />
+			<s:method name="listaProfessorPorCurso"   result="resultadoProfessoresPorCurso(event)" fault="falha(event)" />
+			<s:method name="listaProfessorPorDisciplina" result="resultadoProfessoresPorDisciplina(event)" fault="falha(event)" />
+			<s:method name="listaDisciplinaPorCurso"  result="resultadoDisciplinaPorCurso(event)" fault="falha(event)" />
+			<s:method name="listaDisciplinaProfessores"  result="resultadoDisciplinaPorProfessor(event)" fault="falha(event)" />
+			<s:method name="listaAlunosPorTurma"  result="resultadoAlunosPorTurma(event)" fault="falha(event)" />
+			<s:method name="listaAlunoPorCurso" result="resultadoAlunoPorCurso(event)" fault="falha(event)" />
+			<s:method name="listaAlunoPorProfessor" result="resultadoAlunosPorProfessor(event)" fault="falha(event)" />
+			<s:method name="listaAlunosPorDisciplina" result="resultadoAlunosPorDisciplina(event)" fault="falha(event)" />
+			<s:method name="listaTurmasPorCurso" result="resultadoTurmaPorCurso(event)" fault="falha(event)" />
+			<s:method name="listaTurmaPorAluno" result="resultadoTurmaPorAluno(event)" fault="falha(event)" />
+			<s:method name="listaTurmaPorProfessor" result="resultadoTurmaPorProfessor(event)" fault="falha(event)" />
+			<s:method name="listaTurmaPorDisciplina" result="resultadoTurmaPorDisciplina(event)" fault="falha(event)" />
+			<s:method name="listaSalaPorProfessor" result="resultadoSalaPorProfessor(event)" fault="falha(event)" />
+			<s:method name="listaSalaPorTurma"  result="resultadoSalaPorTurma(event)" fault="falha(event)" />
+			<s:method name="listaSalaPorDisciplina" result="resultadoSalaPorDisciplina(event)" fault="falha(event)" />
+			<s:method name="listaAlunosPorTurmaRendimento"  result="resultadoAlunos(event)" fault="falha(event)" />
+			<s:method name="listaProfessorPorCursoFrequencia" result="resultadoProfessores(event)" fault="falha(event)" />
+			<s:method name="listaDisciplinaProfessoresFrequencia" result="resultadoDisciplinas(event)" fault="falha(event)" />
+			<s:method name="listaAulasPorTurma" result="resultadoAula(event)" fault="falha(event)" />
+			<s:method name="getTurma" result ="resultadoTurmaFrequencia(event)" fault="falha(event)" />
+			<s:method name="listaBoletim" result="resultadoBoletim(event)" fault="falha(event)" />
+			<s:method name="montaRendimento" result="resultadoRendimento(event)" fault="falha(event)" />
+		</s:RemoteObject>
+		<mx:DateFormatter id="dateFormat" formatString="DD/MM/YYYY"/>
+		
+	</fx:Declarations>
+	
+	
+	
+	<mx:TabNavigator x="23" y="10" width="365" height="252" id="tabNavigator">
+		<s:NavigatorContent id="tabFalta" width="100%" height="100%" label="Faltas">
+			<s:Label x="13" y="14" color="#4C2602" text="Exibir faltas por:" textDecoration="none"/>
+			<s:Label includeIn="State1" x="71" y="58" color="#4C2602" text="Fltro:"
+					 textDecoration="none"/>
+			<s:ComboBox id="comboFaltasPor" x="110" y="10" width="126"
+						change="mudaCampoParametro(event)"
+						width.DateField="133">
+				<s:ArrayCollection>
+					<fx:String>TURMA</fx:String>
+					<fx:String>CURSO</fx:String>
+					<fx:String>DATA</fx:String>
+					<fx:String>PROFESSOR</fx:String>
+					<fx:String>DISCIPLINA</fx:String>
+					<fx:String>ALUNO</fx:String>
+				</s:ArrayCollection>
+			</s:ComboBox>
+			<s:ComboBox id="comboFiltro" includeIn="State1" x="108" y="58" width="126">
+				<s:ArrayCollection>
+					<fx:String>TURMA</fx:String>
+					<fx:String>CURSO</fx:String>
+					<fx:String>DATA</fx:String>
+					<fx:String>PROFESSOR</fx:String>
+					<fx:String>DISCIPLINA</fx:String>
+					<fx:String>ALUNO</fx:String>
+				</s:ArrayCollection>
+			</s:ComboBox>
+			<s:Button x="289" y="197" label="Gerar" click="gerarRelatorio()"/>
+			<mx:DateField id="campoDe" includeIn="DateField" x="110" formatString="DD/MM/YYYY" y="54" width="133" monthNames="['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']"/>
+			<s:Label includeIn="DateField" x="83" y="65" text="De:" color="#4C2602"/>
+			<mx:DateField id="campoAte" includeIn="DateField" formatString="DD/MM/YYYY" x="110" y="84" width="133" monthNames="['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']"/>
+			<s:Label includeIn="DateField" x="79" y="94" text="Até:" color="#4C2602"/>
+			<s:Label includeIn="DateField" x="45" y="125" color="#4C2602" text="Tipo Filtro:"
+					 textDecoration="none"/>
+			<s:ComboBox id="comboFiltro0" includeIn="DateField" x="111" y="113" width="130" change="carregaFiltroData(event)">
+				<s:ArrayCollection>
+					<fx:String>ALUNO</fx:String>
+					<fx:String>PROFESSOR</fx:String>
+					<fx:String>DISCIPLINA</fx:String>
+					<fx:String>SEM FILTRO</fx:String>	
+				</s:ArrayCollection>
+			</s:ComboBox>
+			<s:Label includeIn="DateField" x="71" y="158" color="#4C2602" text="Filtro:"
+					 textDecoration="none"/>
+			<s:ComboBox id="comboFiltro1" includeIn="DateField" x="112" y="147" width="129" />
+			
+		</s:NavigatorContent>
+		<s:NavigatorContent id="tabRelatoriosComuns" width="100%" height="100%"
+							label="Relatórios Comuns">
+			<s:ComboBox id="comboRelatoriosComuns" x="110" y="10" change="mudaFiltro(event)"
+						width="126">
+				<s:ArrayCollection>
+					<fx:String>PROFESSORES</fx:String>
+					<fx:String>DISCIPLINAS</fx:String>
+					<fx:String>ALUNOS</fx:String>
+					<fx:String>TURMAS</fx:String>
+					<fx:String>SALAS</fx:String>
+				</s:ArrayCollection>
+			</s:ComboBox>
+			<s:Label x="13" y="14" color="#4C2602" text="Relatório de:" textDecoration="none"/>
+			<s:Button x="289" y="197" label="Gerar" click="gerarRelatorio()"/>
+			<s:ComboBox id="comboTipoFiltroRelatoriosComuns" x="110" y="51" width="126"
+						change="novoCampoFiltro(event)"/>
+			<s:Label x="13" y="55" color="#4C2602" text="Por:" textDecoration="none"/>
+			<s:ComboBox id="comboFiltroRelatoriosComuns" x="110" y="97" width="126"/>
+			<s:Label x="13" y="104" height="15" color="#4C2602" text="Filtro:" textDecoration="none"/>
+		</s:NavigatorContent>
+		<s:NavigatorContent width="100%" height="100%" label="Frequência">
+			<s:ComboBox id="comboProfessorFrequencia" dataProvider="{alprofessornomesobrenome}" change="carregaDisciplina(event)" x="112" y="71" 
+						width="126" />
+			<s:Label x="15" y="71" color="#4C2602" text="Professor:" textDecoration="none"/>
+			<s:ComboBox id="comboCursoFrequencia" creationComplete="listaCurso()" change="carregaProfessor(event)" x="112" y="41" dataProvider="{alcurso}" 
+						width="126" />
+			<s:ComboBox id="comboDisciplinaFrequencia" x="112" y="102" dataProvider="{aldisciplina}" change="carregaTurma(event)" 
+						width="126" />
+			<s:Label x="15" y="102" color="#4C2602" text="Disciplina:" textDecoration="none"/>
+			<s:Label x="15" y="10" color="#4C2602" text="Ano:" textDecoration="none"/>
+			<s:Label x="15" y="41" color="#4C2602" text="Curso:" textDecoration="none"/>
+			<s:TextInput id="campoAnoFrequencia" x="112" y="12" width="126" maxChars="4"
+						 restrict="0-9" change="LimpaTurmaFrequencia()"
+						 toolTip.State1="Apenas valores numéricos com o máximo de 4 caracteres são permitidos"/>
+			<s:Label x="15" y="133" color="#4C2602" text="Turma:" textDecoration="none"/>
+			<s:TextInput id="campoTurmaFrequencia" x="112" y="133" width="126" editable="false"/>
+			<s:Button x="289" y="197" label="Gerar" click="gerarRelatorio()"/>
+		</s:NavigatorContent>
+	</mx:TabNavigator>
+</s:TitleWindow>

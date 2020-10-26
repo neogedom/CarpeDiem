@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:componente="com.flexpernambuco.controls.*"
+		 xmlns:fromatter="br.com.carpediem.controle.fromatter.*"
+		 width="934" height="480" title="Quadro de Notas" creationComplete="init(event)">
+	<fx:Script>
+		<![CDATA[
+			import br.com.carpediem.controle.DataBind;
+			
+			import mx.managers.CursorManager;
+			
+			import br.com.carpediem.controle.Navegacao;
+			import br.com.carpediem.modelo.Aluno;
+			import br.com.carpediem.modelo.Boletim;
+			import br.com.carpediem.modelo.Curso;
+			import br.com.carpediem.modelo.Disciplina;
+			import br.com.carpediem.modelo.Professor;
+			import br.com.carpediem.modelo.Turma;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.DataGridEvent;
+			import mx.events.FlexEvent;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import spark.events.IndexChangeEvent;
+			
+			[Bindable]
+			public var al:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alturma:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alturmacod:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alcurso:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alboletim:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var aldisciplina:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var rowNumber:int;
+			
+			protected function init(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				remoteObject.listaCursos();
+			}
+			
+			protected function resultadoTurmas(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var cont:int;
+				var turma:Turma;
+				alturma.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; al.length; cont++)
+				{
+					turma = al.getItemAt(cont) as Turma;
+					alturmacod.addItem((turma.codigoTurma).toString());
+					alturma.addItem(turma);
+					
+				}
+			}
+			
+			protected function falha(event:FaultEvent):void
+			{
+				// TODO Auto-generated method stub
+				Alert.show("- Erro no BlazeDS\n" + event.fault.faultString);
+			}
+			
+			public function carregaTurma():void
+			{
+				remoteObject.listaTurmasPorCurso(alcurso.getItemAt(comboCurso.selectedIndex).toString()); 
+				//comboDisciplina.enabled = true;
+			}
+			
+			protected function resultadoBoletim(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var cont:int;
+				var boletim:Boletim;
+				alboletim.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; cont < al.length; cont++)
+				{
+					boletim = al.getItemAt(cont) as Boletim;
+					alboletim.addItem(boletim);
+				}
+				CursorManager.removeBusyCursor();
+				
+			}
+			
+			protected function carregaTextInputs():void
+			{
+				campoAno.text = (alturma.getItemAt(comboTurma.selectedIndex) as Turma).ano;
+				campoProfessor.text = (alturma.getItemAt(comboTurma.selectedIndex) as Turma).professor.nome + " " + (alturma.getItemAt(comboTurma.selectedIndex) as Turma).professor.sobrenome;
+				campoDisciplina.text = (alturma.getItemAt(comboTurma.selectedIndex) as Turma).disciplina.nome;
+				alboletim.addAll((alturma.getItemAt(comboTurma.selectedIndex) as Turma).aluno);
+				remoteObject.listaBoletim((alturma.getItemAt(comboTurma.selectedIndex) as Turma).codigoTurma);
+				CursorManager.setBusyCursor();
+			}
+			
+			protected function resultadoCursos(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var cont:int;
+				var curso:Curso;
+				alcurso.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; al.length; cont++)
+				{
+					curso = al.getItemAt(cont) as Curso;
+					alcurso.addItem(curso.nome);
+				}
+			}
+			
+			protected function verificaLinhaEditavel(event:DataGridEvent):void
+			{
+				// TODO Auto-generated method stub
+				if (event.rowIndex != rowNumber)
+				{
+					event.preventDefault();
+				}
+			}
+			
+			public function editarDados():void
+			{
+				tabelaBoletim.editable = true;
+				rowNumber = tabelaBoletim.selectedIndex;
+				DataBind.instance().tabelaFaltaEditavel = true;
+				
+			}
+			
+			public function cancelarEdicao():void
+			{
+				tabelaBoletim.editable = false;
+				DataBind.instance().tabelaFaltaEditavel = false;
+				alboletim.removeAll();
+				remoteObject.listaBoletim((alturma.getItemAt(comboTurma.selectedIndex) as Turma).codigoTurma);
+				Alert.show("A edição para esta tabela foi cancelada!");
+			}
+			
+			public function salvarDados():void
+			{
+				var boletim:Boletim = new Boletim();
+				var aluno:Aluno = new Aluno();
+				var turma:Turma = new Turma();
+				
+				
+				aluno.nome = (tabelaBoletim.dataProvider.getItemAt(tabelaBoletim.selectedIndex) as Boletim).aluno.nome;
+				aluno.sobrenome = (tabelaBoletim.dataProvider.getItemAt(tabelaBoletim.selectedIndex) as Boletim).aluno.sobrenome;
+				boletim.aluno =(tabelaBoletim.dataProvider.getItemAt(tabelaBoletim.selectedIndex) as Boletim).aluno;
+				
+				turma.codigoTurma = (tabelaBoletim.dataProvider.getItemAt(tabelaBoletim.selectedIndex) as Boletim).turma.codigoTurma;
+				boletim.turma = turma;
+		
+				boletim.VA1 = (tabelaBoletim.dataProvider.getItemAt(tabelaBoletim.selectedIndex) as Boletim).VA1;
+				boletim.VA2 = (tabelaBoletim.dataProvider.getItemAt(tabelaBoletim.selectedIndex) as Boletim).VA2;
+				boletim.VA3 = (tabelaBoletim.dataProvider.getItemAt(tabelaBoletim.selectedIndex) as Boletim).VA3;
+				boletim.VA4 = (tabelaBoletim.dataProvider.getItemAt(tabelaBoletim.selectedIndex) as Boletim).VA4;
+				boletim.VA5 = (tabelaBoletim.dataProvider.getItemAt(tabelaBoletim.selectedIndex) as Boletim).VA5;
+				boletim.status = (tabelaBoletim.dataProvider.getItemAt(tabelaBoletim.selectedIndex) as Boletim).status;
+				boletim.faltas = DataBind.instance().faltasBoletimSelecionado;
+			
+				remoteObject.alteraBoletim(boletim);
+				tabelaBoletim.editable = false;
+			}
+			
+			public function selecionaLinha():void
+			{
+				DataBind.instance().boletimLinhaSelecionada.codigoBoletim = tabelaBoletim.selectedItem.codigoBoletim;
+				
+			}
+			
+			
+			protected function resultadoCadastro(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				Alert.show("Dados salvos com sucesso!");
+			}
+			
+			protected function acessaTelaInicial(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				Navegacao.instance().AcessaTelaInicial();
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<s:RemoteObject id="remoteObject" destination="FlexRemoto" fault="falha(event)">
+			<s:method name="listaTurmasPorCurso" result="resultadoTurmas(event)" fault="falha(event)" />
+			<s:method name="listaCursos"  result="resultadoCursos(event)" fault="falha(event)" />
+			<s:method name="listaBoletim" result="resultadoBoletim(event)" fault="falha(event)" />
+			<s:method name="alteraBoletim" result="resultadoCadastro(event)" fault="falha(event)" />
+		</s:RemoteObject>
+		<fromatter:VAFormatter id="vaFormat" />
+	</fx:Declarations>
+	
+	<s:Label x="13" y="4" text="Curso:"/>
+	<s:Label x="215" y="4" text="Turma:"/>
+	<s:Label x="581" y="5" text="Professor:"/>
+	<s:Label x="417" y="5" text="Ano:"/>
+	<s:TextInput id="campoProfessor" x="581" y="24" width="179" editable="false"/>
+	<s:ComboBox id="comboCurso" x="13" y="22" width="194" dataProvider="{alcurso}" change="carregaTurma()" />
+	<s:ComboBox id="comboTurma" x="215" y="22" width="194" dataProvider="{alturmacod}" change="carregaTextInputs()"/>
+	<s:TextInput id="campoAno" x="417" y="24" width="156" editable="false"/>
+	<s:Label x="768" y="5" text="Disciplina:"/>
+	<s:TextInput id="campoDisciplina" x="768" y="24" width="156" editable="false"/>
+	<s:Button x="723" y="421" label="Voltar à Tela Inicial" click="acessaTelaInicial(event)"/>
+	<mx:DataGrid id="tabelaBoletim" x="91" y="53" width="753" height="360"
+				 color="#4C2600" dataProvider="{alboletim}"
+				 itemEditBeginning="verificaLinhaEditavel(event)"
+				 variableRowHeight="true">
+		<mx:columns>
+			<mx:DataGridColumn dataField="codigoBoletim" editable="false"
+							   headerText="Codigo" sortable="false"/>
+				<mx:DataGridColumn dataField="aluno.nome" headerText="Nome"
+								   resizable="true" sortable="false">
+					<mx:itemEditor>
+						<fx:Component>
+							<componente:MasterTextInput restrict="a-z 0-9 \.\-\ª\º" />
+						</fx:Component>
+					</mx:itemEditor>
+				</mx:DataGridColumn>
+			<mx:DataGridColumn dataField="aluno.sobrenome" headerText="Sobrenome" sortable="false"/>
+			<mx:DataGridColumn dataField="VA1" headerText="1ª VA" sortable="false">
+				<mx:itemRenderer>
+					<fx:Component>
+						<mx:Label text="{outerDocument.vaFormat.doFormat(data.VA1)}" />
+					</fx:Component>
+				</mx:itemRenderer>
+			</mx:DataGridColumn>
+			<mx:DataGridColumn dataField="VA2" headerText="2ª VA" sortable="false">
+				<mx:itemRenderer>
+					<fx:Component>
+						<mx:Label text="{outerDocument.vaFormat.doFormat(data.VA2)}" />
+					</fx:Component>
+				</mx:itemRenderer>
+			</mx:DataGridColumn>
+			<mx:DataGridColumn dataField="VA3" headerText="3ª VA" sortable="false">
+				<mx:itemRenderer>
+					<fx:Component>
+						<mx:Label text="{outerDocument.vaFormat.doFormat(data.VA3)}" />
+					</fx:Component>
+				</mx:itemRenderer>
+			</mx:DataGridColumn>
+			<mx:DataGridColumn dataField="VA4" headerText="4ª VA" sortable="false">
+				<mx:itemRenderer>
+					<fx:Component>
+						<mx:Label text="{outerDocument.vaFormat.doFormat(data.VA4)}" />
+					</fx:Component>
+				</mx:itemRenderer>
+			</mx:DataGridColumn>
+			<mx:DataGridColumn width="200" dataField="VA5" headerText="5ª VA" sortable="false">
+				<mx:itemRenderer>
+					<fx:Component>
+						<mx:Label text="{outerDocument.vaFormat.doFormat(data.VA5)}" />
+					</fx:Component>
+				</mx:itemRenderer>
+			</mx:DataGridColumn>
+				<mx:DataGridColumn dataField="quantidadeFalta" editable="false"
+								   headerText="Quant. Faltas"
+								   resizable="false" sortable="false"/>
+			<mx:DataGridColumn dataField="faltas" headerText="Faltas"  itemRenderer="br.com.carpediem.controle.renderers.FaltasButtonRenderer" sortable="false"/>
+			<mx:DataGridColumn editable="false" dataField="operacoes" headerText="Operações" itemRenderer="br.com.carpediem.controle.renderers.OperationsRenderer"/>
+		</mx:columns>
+	</mx:DataGrid>
+</s:Panel>

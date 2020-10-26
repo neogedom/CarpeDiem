@@ -1,0 +1,2844 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Accordion xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 	  xmlns:s="library://ns.adobe.com/flex/spark" 
+		 	  xmlns:mx="library://ns.adobe.com/flex/mx"
+			  xmlns:componente="com.flexpernambuco.controls.*"
+			  xmlns:validadores="br.com.carpediem.controle.validators.*"
+		 	  width="1054" height="558" horizontalCenter="0" verticalCenter="-7" xmlns:validadores1="br.com.carpediem.validadores.*" addedToStage="atualiza()" creationComplete="init(event)">
+	<fx:Script>
+		<![CDATA[
+			import br.com.carpediem.controle.DataBind;
+			import br.com.carpediem.controle.Navegacao;
+			import br.com.carpediem.controle.events.OKEvent;
+			import br.com.carpediem.controle.validators.CEPValidator;
+			import br.com.carpediem.controle.validators.CNPJValidator;
+			import br.com.carpediem.controle.validators.CPFValidator;
+			import br.com.carpediem.controle.validators.DateValidator;
+			import br.com.carpediem.controle.validators.EmailValidator;
+			import br.com.carpediem.controle.validators.PhoneValidator;
+			import br.com.carpediem.modelo.Administrador;
+			import br.com.carpediem.modelo.Aluno;
+			import br.com.carpediem.modelo.Cidade;
+			import br.com.carpediem.modelo.Curso;
+			import br.com.carpediem.modelo.Disciplina;
+			import br.com.carpediem.modelo.Endereco;
+			import br.com.carpediem.modelo.Estado;
+			import br.com.carpediem.modelo.PessoaFisica;
+			import br.com.carpediem.modelo.Professor;
+			import br.com.carpediem.modelo.Turma;
+			import br.com.carpediem.modelo.Usuario;
+			import br.com.carpediem.visao.popups.TelaTabelaAluno;
+			import br.com.carpediem.visao.popups.TelaTabelaCurso;
+			import br.com.carpediem.visao.popups.TelaTabelaEndereco;
+			import mx.controls.Alert;
+			import mx.controls.Text;
+			import mx.events.AdvancedDataGridEvent;
+			import mx.events.CloseEvent;
+			import mx.events.DataGridEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.CursorManager;
+			import mx.messaging.channels.StreamingAMFChannel;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import spark.events.IndexChangeEvent;
+			
+			private var al:ArrayCollection;
+			[Bindable]
+			public var rowNumber:int;
+			[Bindable]
+			public var itemSelecionado:String;
+			[Bindable]
+			public var cep:String;
+			[Bindable]
+			public var dataNascimento:Date = new Date();
+			[Bindable]
+			public var alestado:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alcidade:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alnome:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alnome1:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alsobrenome:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alprofessornome:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alprofessorsobrenome:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alcursonome:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alcpf:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var aldisciplina:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var aldisciplinaCurso:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var aldisciplinanome:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var aldisciplinaConsulta:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alendereco:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var aladministrador:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alprofessor:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alaluno:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alalunoturma:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alusuario:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alcurso:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alpessoafisica:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var altabelaPrf:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alcomboCurso:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var nivel:String = "";
+			
+			protected function atualiza():void
+			{
+				if (DataBind.instance().usuarioAtual.pessoaFisica.nivelAcesso == 1)
+				{
+					currentState = "ViewAdministrador";
+				}
+				else
+				{
+					currentState = "ViewNormal";
+				}
+			}
+			
+			protected function init(event:FlexEvent):void
+			{	
+				
+				// TODO Auto-generated method stub
+				remoteObject.listaEstados();
+				remoteObject.listaDisciplinas();
+				remoteObject.listaPessoaFisica();
+				
+				//Consultas
+				remoteObject.listaEnderecos();
+				remoteObject.listaAdministradores();
+				remoteObject.listaProfessores();
+				remoteObject.listaAlunos();
+				remoteObject.listaUsuarios();
+				remoteObject.listaCursos();
+			}
+			
+			protected function listaPessoaFisica():void
+			{
+				// TODO Auto-generated method stub
+				remoteObject.listaPessoasFisicasSemUsuario();
+			}
+			private function resultadoEstados (evento:ResultEvent):void
+			{
+				var cont:int;
+				var estado:Estado;
+				al = evento.result as ArrayCollection;
+				for (cont = 0; al.length; cont++)
+				{
+					estado = al.getItemAt(cont) as Estado;
+					alestado.addItem(estado.uf);
+				}
+				
+			}
+			
+			private function resultadoCidades (evento:ResultEvent):void
+			{
+				alcidade = evento.result as ArrayCollection;
+				CursorManager.removeBusyCursor();
+				colunacidade.editable = true;
+			}
+			
+			private function resultadoDisciplinas (evento:ResultEvent):void
+			{
+				var cont:int;
+				var disciplina:Disciplina;
+				al = evento.result as ArrayCollection;
+				for (cont = 0; al.length; cont++)
+				{
+					disciplina = al.getItemAt(cont) as Disciplina;
+					aldisciplina.addItem(disciplina.nome);
+				}
+			}
+			
+			private function resultadoDisciplinaPorCursos (evento:ResultEvent):void
+			{
+				var cont:int;
+				var disciplina:Disciplina;
+				al = evento.result as ArrayCollection;
+				aldisciplinaCurso.removeAll();
+				for (cont = 0; al.length; cont++)
+				{
+					disciplina = al.getItemAt(cont) as Disciplina;
+					aldisciplinaCurso.addItem(disciplina.nome);
+				}
+			}
+			
+			private function LimparCamposAdministradores():void
+			{
+				campoNomeAdministrador.text = "";
+				campoSobreNomeAdministrador.text = "";
+				campoCPFAdministrador.text = "";
+				campoRGAdministrador.text = "";
+				campoDataNascimentoAdministrador.text = "";
+				campoEmailAdministrador.text = "";
+				campoTelefoneAdministrador.text = ""
+				comboSexoAdministrador.selectedIndex = -1;
+				comboEstadoCivilAdministrador.selectedIndex = -1;
+				campoRuaAdministrador.text = "";
+				campoBairroAdministrador.text="";
+				campoNumeroAdministrador.text="";
+				campoComplementoAdministrador.text="";
+				campoCEPAdministrador.text = "     -   ";
+				campoEstadoAdministrador.text = "";
+				campoCidadeAdministrador.text = "";
+			}
+			
+			private function ConcluirAdministradores():void
+			{	
+				if (campoNomeAdministrador.text == "" || campoSobreNomeAdministrador.text == "" || campoCPFAdministrador.text == "   .   .   -  " || campoRGAdministrador.text == "" ||
+					campoTelefoneAdministrador.text == "(  )    -    " || campoDataNascimentoAdministrador.text == "" || comboSexoAdministrador.selectedIndex == -1 ||
+					comboEstadoCivilAdministrador.selectedIndex == -1 || campoRuaAdministrador.text == "" || campoBairroAdministrador.text == "" || 
+					campoCEPAdministrador.text == "     -   " || campoEstadoAdministrador.text == "" || campoCidadeAdministrador.text == "")
+				{
+					
+					Alert.show("Preencha todos os campos macardos com *. Eles são obrigatórios!","Atenção");
+				}
+				else {
+					var administrador:Administrador = new Administrador();
+					var endereco:Endereco = new Endereco();
+					var cidade:Cidade = new Cidade();
+					var estado:Estado = new Estado();
+					
+					administrador.nome = campoNomeAdministrador.text;
+					administrador.sobrenome = campoSobreNomeAdministrador.text;
+					administrador.cpf = campoCPFAdministrador.text;
+					administrador.rg = campoRGAdministrador.text;
+					administrador.sexo = comboSexoAdministrador.selectedItem;
+					administrador.estadoCivil = comboEstadoCivilAdministrador.selectedItem;
+					administrador.telefone = campoTelefoneAdministrador.text;
+					administrador.dataNascimento =  campoDataNascimentoAdministrador.selectedDate;
+					administrador.email = campoEmailAdministrador.text;
+					administrador.nivelAcesso = 1;
+					administrador.ativo = true;
+					
+					endereco.rua = campoRuaAdministrador.text;
+					endereco.bairro = campoBairroAdministrador.text;
+					endereco.numero = campoNumeroAdministrador.text;
+					endereco.complemento = campoComplementoAdministrador.text;
+					endereco.cep = campoCEPAdministrador.text;
+					
+					cidade.nome = campoCidadeAdministrador.text;
+					endereco.cidade = cidade;
+					
+					estado.uf = campoEstadoAdministrador.text;
+					cidade.estado = estado;
+					endereco.cidade = cidade;
+					administrador.endereco = endereco;
+					
+					remoteObject.cadastraAdministrador(administrador);
+				}
+			}
+			
+			private function resultado(evento:ResultEvent):void
+			{
+				Alert.show("Dados salvos com sucesso!","Atenção",Alert.OK);
+				
+				if (tabNavigatorControle.selectedChild.label == "Administradores")
+				{
+					LimparCamposAdministradores();
+				}
+				else if (tabNavigatorControle.selectedChild.label == "Usuários")
+				{
+					LimparCamposUsuarios();
+				}
+				else if (tabNavigatorControle.selectedChild.label == "Professores")
+				{
+					LimparCamposProfessores();
+				}
+				else if (tabNavigatorControle.selectedChild.label == "Disciplinas")
+				{
+					LimparCamposDisciplinas();
+				}
+				else if (tabNavigatorControle.selectedChild.label == "Alunos")
+				{
+					LimparCamposAlunos();
+				}
+					
+				else if (tabNavigatorControle.selectedChild.label == "Endereços")
+				{
+					LimparCamposEnderecos();
+				}
+				
+				else if (tabNavigatorControle.selectedChild.label == "Curso")
+				{
+					LimparCamposCursos();
+				}
+				else if (tabNavigatorControle.selectedChild.label == "Turmas")
+				{
+					LimparTurma();
+				}
+			}
+			
+			//Usuários
+			private function LimparCamposUsuarios():void
+			{
+				campoUsuario.text = "";
+				campoSenhaUsuario.text = "";
+				campoSenhaDenovo.text = "";
+				campoNomeUsuario.selectedIndex = -1;
+				campoSobrenome.text = "";
+				campoCPFUsuario.text = "";
+			}
+			
+			private function ConcluirUsuarios():void
+			{
+				if (campoUsuario.text == "" || campoSenhaUsuario.text == "" || campoSenhaDenovo.text == "" || campoCPFUsuario.text == "   .   .   -  " )
+				{
+					Alert.show("Preencha todos os campos macardos com *. Eles são obrigatórios!","Atenção");
+				}
+				else 
+				{
+					var usuario:Usuario = new Usuario();
+					var pessoaFisica:PessoaFisica = new PessoaFisica();
+					usuario.usuario = campoUsuario.text;
+					usuario.senha = campoSenhaUsuario.text;
+					
+					
+					pessoaFisica.nome = (alnome1.getItemAt(campoNomeUsuario.selectedIndex) as String) ;
+					pessoaFisica.sobrenome = (alsobrenome.getItemAt(campoNomeUsuario.selectedIndex) as String);
+					usuario.pessoaFisica = pessoaFisica;
+					usuario.ativo = true;
+					Alert.show(usuario.pessoaFisica.nome + " " + usuario.pessoaFisica.sobrenome);
+					
+					remoteObject.cadastraUsuario(usuario);
+				}
+			}
+			
+			//Professores
+			private function LimparCamposProfessores():void
+			{
+				campoNomeProfessor.text = "";
+				campoSobreNomeProfessor.text = "";
+				campoCPFProfessor.text = "";
+				campoRGProfessor.text = "";
+				campoTelefoneProfessor.text = "";
+				campoDataNascimentoProfessor.text = "";
+				campoEmailProfessor.text = "";
+				comboSexoProfessor.selectedIndex = -1;
+				comboEstadoCivilProfessor.selectedIndex = -1;
+				campoRuaProfessor.text = "";
+				campoBairroProfessor.text="";
+				campoNumeroProfessor.text="";
+				campoCEPProfessor.text = "";
+				campoComplementoProfessor.text="";
+				campoEstadoProfessor.text = "";
+				campoCidadeProfessor.text = "";
+			}
+			
+			private function ConcluirProfessores():void
+			{
+				if (campoNomeProfessor.text == "" || campoSobreNomeProfessor.text == "" || campoCPFProfessor.text == "   .   .   -  " || campoRGProfessor.text == "" ||
+					campoTelefoneProfessor.text == "(  )    -    " || campoDataNascimentoProfessor.text == "" || comboSexoProfessor.selectedIndex == -1 ||
+					comboEstadoCivilProfessor.selectedIndex == -1 || campoRuaProfessor.text == "" || campoBairroProfessor.text == "" || 
+					campoCEPProfessor.text == "     -   " || campoEstadoProfessor.text == "" || campoCidadeProfessor.text == "" || altabelaPrf.length == 0)
+				{
+					
+					Alert.show("Preencha todos os campos macardos com *. Eles são obrigatórios!","Atenção");
+				}
+				else {
+					var professor:Professor = new Professor();
+					var endereco:Endereco = new Endereco();
+					var cidade:Cidade = new Cidade();
+					var estado:Estado = new Estado();
+					
+					professor.nome = campoNomeProfessor.text;
+					professor.sobrenome = campoSobreNomeProfessor.text;
+					professor.cpf = campoCPFProfessor.text;
+					professor.rg = campoRGProfessor.text;
+					professor.sexo = comboSexoProfessor.selectedItem;
+					professor.estadoCivil = comboEstadoCivilProfessor.selectedItem;
+					professor.telefone = campoTelefoneProfessor.text;
+					professor.dataNascimento =  campoDataNascimentoProfessor.selectedDate;
+					professor.email = campoEmailProfessor.text;
+					professor.nivelAcesso = 2;
+					professor.disciplinas.addAll(altabelaPrf);
+					professor.ativo = true;
+					
+					endereco.rua = campoRuaProfessor.text;
+					endereco.bairro = campoBairroProfessor.text;
+					endereco.numero = campoNumeroProfessor.text;
+					endereco.complemento = campoComplementoProfessor.text;
+					endereco.cep = campoCEPProfessor.text;
+					
+					cidade.nome = campoCidadeProfessor.text;
+					endereco.cidade = cidade;
+					
+					estado.uf = campoEstadoProfessor.text;
+					cidade.estado = estado;
+					endereco.cidade = cidade;
+					professor.endereco = endereco;
+					
+					remoteObject.cadastraProfessor(professor)
+				}
+			}
+			
+			//Disciplinas
+			private function LimparCamposDisciplinas():void
+			{
+				campoNomeDisciplina.text = "";
+				comboNomeCurso.selectedIndex = -1;
+			}
+			
+			private function ConcluirDisciplinas():void
+			{
+				if (campoNomeDisciplina.text == "")
+				{
+					Alert.show("Preencha todos os campos macardos com *. Eles são obrigatórios!","Atenção");
+				}
+				else {
+					var disciplina:Disciplina = new Disciplina();
+					var curso:Curso = new Curso();
+					disciplina.nome = campoNomeDisciplina.text;
+					
+					curso.nome = comboNomeCurso.selectedItem;
+					disciplina.curso = curso;
+					disciplina.ativo = true;
+					
+					remoteObject.cadastraDisciplina(disciplina);
+				}
+			}
+			
+			//Alunos
+			private function LimparCamposAlunos():void
+			{
+				campoNomeAluno.text = "";
+				campoSobreNomeAluno.text = "";
+				campoCPFAluno.text = "";
+				campoRGAluno.text = "";
+				campoTelefoneAluno.text = "";
+				campoDataNascimentoAluno.text = "";
+				campoEmailAluno.text = "";
+				comboSexoAluno.selectedIndex = -1;
+				comboEstadoCivilAluno.selectedIndex = -1;
+				campoRuaAluno.text = "";
+				campoBairroAluno.text="";
+				campoNumeroAluno.text="";
+				campoComplementoAluno.text="";
+				campoCEPAluno.text = "";
+				campoEstadoAluno.text = "";
+				campoMatriculaAluno.text = "";
+				campoCidadeAluno.text = "";
+			}
+			
+			private function ConcluirAluno():void
+			{
+				if (campoNomeAluno.text == "" || campoSobreNomeAluno.text == "" || campoMatriculaAluno.text == "" || campoCPFAluno.text == "   .   .   -  " || campoRGAluno.text == "" ||
+					campoTelefoneAluno.text == "(  )    -    " || campoDataNascimentoAluno.text == "" || comboSexoAluno.selectedIndex == -1 ||
+					comboEstadoCivilAluno.selectedIndex == -1 || campoRuaAluno.text == "" || campoBairroAluno.text == "" || 
+					campoCEPAluno.text == "     -   " || campoEstadoAluno.text == "" || campoCidadeAluno.text == "" )
+				{
+					
+					Alert.show("Preencha todos os campos macardos com *. Eles são obrigatórios!","Atenção");
+				}
+				else {
+					var aluno:Aluno = new Aluno();
+					var endereco:Endereco = new Endereco();
+					var cidade:Cidade = new Cidade();
+					var estado:Estado = new Estado();
+					
+					aluno.nome = campoNomeAluno.text;
+					aluno.sobrenome = campoSobreNomeAluno.text;
+					aluno.matricula = campoMatriculaAluno.text;
+					aluno.cpf = campoCPFAluno.text;
+					aluno.rg = campoRGAluno.text;
+					aluno.sexo = comboSexoAluno.selectedItem;
+					aluno.estadoCivil = comboEstadoCivilAluno.selectedItem;
+					aluno.telefone = campoTelefoneAluno.text;
+					aluno.dataNascimento =  campoDataNascimentoAluno.selectedDate;
+					aluno.email = campoEmailAluno.text;
+					aluno.nivelAcesso = 3;
+					aluno.ativo = true;
+					endereco.rua = campoRuaAluno.text;
+					endereco.bairro = campoBairroAluno.text;
+					endereco.numero = campoNumeroAluno.text;
+					endereco.complemento = campoComplementoAluno.text;
+					endereco.cep = campoCEPAluno.text;
+					
+					cidade.nome = campoCidadeAluno.text;
+					endereco.cidade = cidade;
+					
+					estado.uf = campoEstadoAluno.text;
+					cidade.estado = estado;
+					endereco.cidade = cidade;
+					aluno.endereco = endereco;
+					
+					remoteObject.cadastraAluno(aluno);
+				}
+			}
+			
+			
+			//Endereços
+			private function ConcluirEnderecos ():void
+			{
+				if (campoRua.text == "" || campoBairro.text == "" || campoNumero.text == "" || campoCEP.text == "" ||
+					comboCidade.selectedIndex == -1 || comboEstado.selectedIndex == -1)
+				{
+					Alert.show("Preencha todos os campos macardos com *. Eles são obrigatórios!","Atenção");
+				}
+				else {
+					var endereco:Endereco = new Endereco();
+					var cidade:Cidade = new Cidade();
+					var estado:Estado = new Estado();
+					endereco.rua = campoRua.text;
+					endereco.bairro = campoBairro.text;
+					endereco.numero = campoNumero.text;
+					endereco.complemento = campoComplemento.text;
+					endereco.cep = campoCEP.text;
+					
+					cidade.nome = comboCidade.selectedItem;
+					endereco.cidade = cidade;
+					
+					estado.uf = comboEstado.selectedItem;
+					endereco.cidade.estado = estado;
+					endereco.ativo = true;
+					
+					remoteObject.cadastraEndereco(endereco);
+				}
+			}
+			
+			private function LimparCamposEnderecos():void
+			{
+				campoRua.text = "";
+				campoBairro.text = "";
+				campoNumero.text = "";
+				campoComplemento.text = "";
+				campoCEP.text = "";
+				comboCidade.selectedIndex = -1;
+				comboEstado.selectedIndex = -1;
+			}
+			
+			private function LimparCamposCursos():void
+			{
+				campoNomeCurso.text = "";
+			}
+			
+			private function exibeAlert ():void
+			{	
+				var alert:Alert;
+				Alert.yesLabel = "Sim";
+				Alert.noLabel = "Não";
+				alert = Alert.show("Você tem certeza que quer limpar todos os campos?","Atenção",Alert.YES | Alert.NO);
+				alert.addEventListener(CloseEvent.CLOSE, fechado);
+			}
+			
+			
+			private function fechado (evento:CloseEvent):void
+			{
+				switch (evento.detail)
+				{
+					case Alert.YES:
+						
+						
+						if (tabNavigatorControle.selectedChild.label == "Administradores")
+						{
+							LimparCamposAdministradores();
+						}
+						else if (tabNavigatorControle.selectedChild.label == "Usuários")
+						{
+							LimparCamposUsuarios();
+						}
+						else if (tabNavigatorControle.selectedChild.label == "Professores")
+						{
+							LimparCamposProfessores();
+						}
+						else if (tabNavigatorControle.selectedChild.label == "Disciplinas")
+						{
+							LimparCamposDisciplinas();
+						}
+						else if (tabNavigatorControle.selectedChild.label == "Alunos")
+						{
+							LimparCamposAlunos();
+						} 
+						else if (tabNavigatorControle.selectedChild.label == "Endereços")
+						{
+							LimparCamposEnderecos();
+						} 
+						
+						break;
+					case Alert.NO:
+						break;
+					
+				}
+			}
+			
+			
+			
+			private function falha (e:FaultEvent):void{
+				if (e.fault.faultString.substring(132, 135) == "CPF")
+				{
+					Alert.show("CPF já existe!");
+					
+				}
+				else
+				{
+					Alert.show("- Erro no BlazeDS\n" + e.fault.faultString);
+					
+				}
+				DataBind.instance().camposEnderecoEditavel = false;
+				DataBind.instance().tabelaDisciplinaAlunoEditavel = false;
+				DataBind.instance().tabelaDisciplinaProfessorEditavel = false;
+				DataBind.instance().mudouCidade = false;
+				DataBind.instance().mudouEstado = false;
+				DataBind.instance().linhaEditavel = false;
+				DataBind.instance().tabelaUsuarioEditavel = false;
+				
+				
+			}
+			
+			private function verificaFrenquencia():void
+			{
+				
+			}
+			
+			// Validadores
+			public function campoCPFAdministrador_focusOutHandler(event:FocusEvent):void
+			{
+				// TODO Auto-generated method stub
+				
+				if (this.selectedChild.label == "Cadastros")
+				{
+					if (!CPFValidator.doValidation(campoCPFAdministrador.text))
+					{
+					}
+					
+				}
+				if (this.selectedChild.label == "Consultas e Relatórios")
+				{
+					if (!CPFValidator.doValidation(tabelaConsultaAdministradores.selectedItem.cpf))
+					{
+					}
+				}
+			}
+			
+			public function campoEmailAdministrador_focusOutHandler(event:FocusEvent):void
+			{
+				// TODO Auto-generated method stub
+				
+				if (this.selectedChild.label == "Cadastros")
+				{
+					if (!EmailValidator.doValidation(campoEmailAdministrador.text))
+					{
+						
+					}
+				}
+				if (this.selectedChild.label == "Consultas e Relatórios")
+				{
+					if (!EmailValidator.doValidation(tabelaConsultaAdministradores.selectedItem.email))
+					{
+						
+					}
+				}
+			}
+			
+			public function campoTelefoneAdministrador_focusOutHandler(event:FocusEvent):void
+			{
+				// TODO Auto-generated method stub
+				
+				if (this.selectedChild.label == "Cadastros")
+				{
+					if (!PhoneValidator.doValidation(campoTelefoneAdministrador.text))
+					{
+						
+					}
+				}
+				if (this.selectedChild.label == "Consultas e Relatórios")
+				{
+					if (!PhoneValidator.doValidation(tabelaConsultaAdministradores.selectedItem.telefone))
+					{
+						
+					}
+				}
+			}
+			
+			public function campoCEP_focusOutHandler(event:FocusEvent):void
+			{
+				// TODO Auto-generated method stub
+				if (this.selectedChild.label == "Cadastros")
+				{
+					if (!CEPValidator.doValidation(campoCEP.text))
+					{
+					
+					}
+				}
+				if (this.selectedChild.label == "Consultas e Relatórios")
+				{
+					if (!CEPValidator.doValidation(tabelaConsultaEndereco.selectedItem.cep))
+					{						
+	
+					}
+				}
+			}
+			
+			
+		
+			
+			protected function comboEstado_changeHandler(event:IndexChangeEvent):void
+			{
+				// TODO Auto-generated method stub
+				comboCidade.prompt = "Carregando cidades...";
+				alcidade.removeAll();
+				CursorManager.setBusyCursor();
+				remoteObject.listaCidades(comboEstado.selectedItem);
+				
+			}	
+			
+			protected function chamaTabelaEnderecos(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				var painel:TelaTabelaEndereco = TelaTabelaEndereco(PopUpManager.createPopUp(this, TelaTabelaEndereco, true));
+				painel.addEventListener(OKEvent.OK, onPopUpClose, false, 0, true);
+				PopUpManager.centerPopUp(painel);
+			}
+			
+			private function onPopUpClose(evento:OKEvent):void
+			{
+				if (tabNavigatorControle.selectedChild.label == "Administradores")
+				{
+					
+					campoRuaAdministrador.text = DataBind.instance().enderecoPopUp.rua;
+					campoBairroAdministrador.text = DataBind.instance().enderecoPopUp.bairro;
+					campoNumeroAdministrador.text = DataBind.instance().enderecoPopUp.numero;
+					campoComplementoAdministrador.text = DataBind.instance().enderecoPopUp.complemento;
+					campoCEPAdministrador.text = DataBind.instance().enderecoPopUp.cep;
+					campoCidadeAdministrador.text = DataBind.instance().enderecoPopUp.cidade.nome;
+					campoEstadoAdministrador.text = DataBind.instance().enderecoPopUp.cidade.estado.uf;
+				}
+				
+				if (tabNavigatorControle.selectedChild.label == "Professores")
+				{
+					campoRuaProfessor.text = DataBind.instance().enderecoPopUp.rua;
+					campoBairroProfessor.text = DataBind.instance().enderecoPopUp.bairro;
+					campoNumeroProfessor.text = DataBind.instance().enderecoPopUp.numero;
+					campoComplementoProfessor.text = DataBind.instance().enderecoPopUp.complemento;
+					campoCEPProfessor.text = DataBind.instance().enderecoPopUp.cep;
+					campoCidadeProfessor.text = DataBind.instance().enderecoPopUp.cidade.nome;
+					campoEstadoProfessor.text = DataBind.instance().enderecoPopUp.cidade.estado.uf;
+				}
+				
+				if (tabNavigatorControle.selectedChild.label == "Alunos")
+				{
+					campoRuaAluno.text = DataBind.instance().enderecoPopUp.rua;
+					campoBairroAluno.text = DataBind.instance().enderecoPopUp.bairro;
+					campoNumeroAluno.text = DataBind.instance().enderecoPopUp.numero;
+					campoComplementoAluno.text = DataBind.instance().enderecoPopUp.complemento;
+					campoCEPAluno.text = DataBind.instance().enderecoPopUp.cep;
+					campoCidadeAluno.text = DataBind.instance().enderecoPopUp.cidade.nome;
+					campoEstadoAluno.text = DataBind.instance().enderecoPopUp.cidade.estado.uf;
+				}
+			}
+			
+			protected function novoEndereco(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				
+				tabNavigatorControle.selectedIndex = 7;
+			}
+			
+			public function campoCPFProfessor_focusOutHandler(event:FocusEvent):void
+			{
+				// TODO Auto-generated method stub
+				
+				if (this.selectedChild.label == "Cadastros")
+				{
+					if (!CPFValidator.doValidation(campoCPFProfessor.text))
+					{
+						
+					}
+				}
+				if (this.selectedChild.label == "Consultas e Relatórios")
+				{
+					if (!CPFValidator.doValidation(tabelaConsultaProfessor.selectedItem.cpf))
+					{
+						
+					}
+				}
+			}
+			
+			public function campoTelefoneProfessor_focusOutHandler(event:FocusEvent):void
+			{
+				// TODO Auto-generated method stub
+				if (this.selectedChild.label == "Cadastros")
+				{
+					if (!PhoneValidator.doValidation(campoTelefoneProfessor.text))
+					{
+						
+					}
+				}
+				if (this.selectedChild.label == "Consultas e Relatórios")
+				{
+					if (!PhoneValidator.doValidation(tabelaConsultaProfessor.selectedItem.telefone))
+					{
+					
+					}
+				}
+			}
+			
+			public function campoEmailProfessor_focusOutHandler(event:FocusEvent):void
+			{
+				// TODO Auto-generated method stub
+				
+				if (this.selectedChild.label == "Cadastros")
+				{
+					if (!EmailValidator.doValidation(campoEmailProfessor.text))
+					{
+					
+					}
+					
+				}
+				if (this.selectedChild.label == "Consultas e Relatórios")
+				{
+					if (!EmailValidator.doValidation(tabelaConsultaProfessor.selectedItem.email))
+					{
+					
+					}
+				}
+			}
+			
+			protected function addDisciplinaProfessor(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				if (comboDisciplinasProfessor.selectedIndex == -1)
+				{
+					Alert.show("Selecione uma disciplina.", "Atenção");
+				}
+				else {
+					var disciplina:Disciplina = new Disciplina();
+					var repetida:Boolean = new Boolean();
+					repetida = false;
+					disciplina.nome = comboDisciplinasProfessor.selectedItem;
+					if (altabelaPrf.length != 0)
+					{
+						for (var cont:int = 0; cont <= (altabelaPrf.length - 1); cont++)
+						{	
+							if (((altabelaPrf.getItemAt(cont)) as Disciplina).nome == disciplina.nome)
+							{
+								repetida = true;
+								break;
+							}
+							else {
+								repetida = false;
+							}
+							
+						}
+						
+						if (repetida == true){
+							Alert.show("Disciplina repetida!", "Atenção");
+						}
+						else {
+							altabelaPrf.addItem(disciplina);
+							comboDisciplinasProfessor.selectedIndex = -1;
+						}
+					}
+					else {
+						altabelaPrf.addItem(disciplina);
+						comboDisciplinasProfessor.selectedIndex = -1;
+					}
+				}
+			}
+			
+			protected function removerDisciplinaProfessor(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				if (comboDisciplinasProfessor.selectedIndex == -1)
+				{
+					Alert.show("Selecione uma disciplina na tabela!","Atenção");
+				}
+				else {
+					altabelaPrf.removeItemAt(tabelaDisciplinasProfessor.selectedIndex);
+				}
+			}
+			
+			protected function campoCPFAluno_focusOutHandler(event:FocusEvent):void
+			{
+				// TODO Auto-generated method stub
+				if (!CPFValidator.doValidation(campoCPFAluno.text))
+				{
+				
+				}
+			}
+			
+			protected function campoTelefoneAluno_focusOutHandler(event:FocusEvent):void
+			{
+				// TODO Auto-generated method stub
+				if (!PhoneValidator.doValidation(campoTelefoneAluno.text))
+				{
+			
+				}
+			}
+			
+			
+			protected function campoCPFUsuario_focusOutHandler(event:FocusEvent):void
+			{
+				// TODO Auto-generated method stub
+				if (campoCPFUsuario.text != "   .   .   -  ")
+				{
+					remoteObject.getPessoaFisicaByCPF(campoCPFUsuario.text);
+				}
+				
+			}
+			
+			protected function resultadoPessoaFisica(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var pessoaFisica:String = event.result as String;
+				//campoNomeUsuario.text = pessoaFisica;
+			}
+			
+			
+			
+			protected function falhaPessoaFisica(event:FaultEvent):void
+			{
+				Alert.show("Pessoa Física não encontrada através deste CPF!","Atenção");
+				campoCPFUsuario.text = "";
+			}
+			
+			protected function campoUsuario_focusOutHandler(event:FocusEvent):void
+			{
+				// TODO Auto-generated method stub
+				if (campoUsuario.text.length < 6 && campoUsuario.text != "")
+				{
+					Alert.show("O nome do usuário deve ter pelo menos seis dígitos.", "Atenção");
+					
+				}
+			}
+			
+			protected function campoSenhaUsuario_focusOutHandler(event:FocusEvent):void
+			{
+				// TODO Auto-generated method stub
+				if (campoSenhaUsuario.text.length < 5 && campoSenhaUsuario.text != "")
+				{
+					Alert.show("A senha deve ter pelo menos seis dígitos.", "Atenção");
+					campoSenhaUsuario.text = "";
+					
+				}
+			}
+			
+			protected function campoSenhaDenovo_focusOutHandler(event:FocusEvent):void
+			{
+				// TODO Auto-generated method stub
+				if (campoSenhaDenovo.text != campoSenhaUsuario.text && campoSenhaDenovo.text != "")
+				{
+					Alert.show("As senhas não coincidem!","Atenção");
+					campoSenhaDenovo.text = "";
+				}
+			}
+			
+			protected function resultadoEnderecos(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var cont:int;
+				var endereco:Endereco;
+				alendereco.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; al.length; cont++)
+				{
+					endereco = al.getItemAt(cont) as Endereco;
+					alendereco.addItem(endereco);
+				}
+			}
+			
+			public function editarDados():void
+			{
+				Alert.show("Linha liberada para edição de dados", "Atenção");
+				if (tabNavigatorConsulta.selectedChild.label == "Endereços")
+				{
+					tabelaConsultaEndereco.editable = true;
+					rowNumber = tabelaConsultaEndereco.selectedIndex;
+				}
+			
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Administradores")
+				{
+					DataBind.instance().mudouCidade = true;
+					tabelaConsultaAdministradores.editable = true;
+					DataBind.instance().camposEnderecoEditavel = true;
+					rowNumber = tabelaConsultaAdministradores.selectedIndex;
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Professores")
+				{
+					DataBind.instance().mudouCidade = true;
+					DataBind.instance().tabelaDisciplinaProfessorEditavel = true;
+					DataBind.instance().camposEnderecoEditavel = true;
+					DataBind.instance().disciplinasProfessorSelecionado = (tabelaConsultaProfessor.dataProvider.getItemAt(tabelaConsultaProfessor.selectedIndex) as Professor).disciplinas;
+					tabelaConsultaProfessor.editable = true;
+					rowNumber = tabelaConsultaProfessor.selectedIndex;
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Alunos")
+				{
+					DataBind.instance().mudouCidade = true;
+					DataBind.instance().tabelaDisciplinaAlunoEditavel = true;
+					DataBind.instance().camposEnderecoEditavel = true;
+					DataBind.instance().disciplinasAlunoSelecionado = (tabelaConsultaAluno.dataProvider.getItemAt(tabelaConsultaAluno.selectedIndex) as Aluno).disciplinas;
+					tabelaConsultaAluno.editable = true;
+					rowNumber = tabelaConsultaAluno.selectedIndex;
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Usuários")
+				{
+					DataBind.instance().mudouCidade = true;
+					tabelaConsultaUsuario.editable = true;
+					DataBind.instance().tabelaUsuarioEditavel = true;
+					DataBind.instance().novaSenha = (tabelaConsultaUsuario.dataProvider.getItemAt(tabelaConsultaUsuario.selectedIndex) as Usuario).senha;
+					DataBind.instance().pessoaFisicaSelecionadaUsuario = (tabelaConsultaUsuario.dataProvider.getItemAt(tabelaConsultaUsuario.selectedIndex) as Usuario).pessoaFisica;
+					rowNumber = tabelaConsultaUsuario.selectedIndex;
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Disciplinas")
+				{
+					DataBind.instance().mudouCidade = true;
+					tabelaConsultaDisciplina.editable = true;
+					rowNumber = tabelaConsultaDisciplina.selectedIndex;
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Cursos")
+				{
+					DataBind.instance().mudouCidade = true;
+					tabelaConsultaCurso.editable = true;
+					rowNumber = tabelaConsultaCurso.selectedIndex;
+				}
+			}
+			
+			public function salvarDados():void
+			{
+				if (tabNavigatorConsulta.selectedChild.label == "Endereços")
+				{
+					var endereco:Endereco = new Endereco();
+					var cidade:Cidade = new Cidade();
+					var estado:Estado = new Estado();
+					endereco.codigo = (tabelaConsultaEndereco.dataProvider.getItemAt(tabelaConsultaEndereco.selectedIndex) as Endereco).codigo;
+					endereco.rua = (tabelaConsultaEndereco.dataProvider.getItemAt(tabelaConsultaEndereco.selectedIndex) as Endereco).rua;
+					endereco.bairro = (tabelaConsultaEndereco.dataProvider.getItemAt(tabelaConsultaEndereco.selectedIndex) as Endereco).bairro;
+					endereco.numero = (tabelaConsultaEndereco.dataProvider.getItemAt(tabelaConsultaEndereco.selectedIndex) as Endereco).numero;
+					endereco.complemento = (tabelaConsultaEndereco.dataProvider.getItemAt(tabelaConsultaEndereco.selectedIndex) as Endereco).complemento;
+					endereco.cep = (tabelaConsultaEndereco.dataProvider.getItemAt(tabelaConsultaEndereco.selectedIndex) as Endereco).cep;
+					
+					cidade.nome = (tabelaConsultaEndereco.dataProvider.getItemAt(tabelaConsultaEndereco.selectedIndex) as Endereco).cidade.nome;
+					endereco.cidade = cidade;
+					
+					estado.uf = (tabelaConsultaEndereco.dataProvider.getItemAt(tabelaConsultaEndereco.selectedIndex) as Endereco).cidade.estado.uf;
+					endereco.cidade.estado = estado;
+					endereco.ativo = true;
+					remoteObject.alteraEndereco(endereco);
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Administradores")
+				{
+					var administrador:Administrador = new Administrador();
+					administrador.codigoAdministrador = (tabelaConsultaAdministradores.dataProvider.getItemAt(tabelaConsultaAdministradores.selectedIndex) as Administrador).codigoAdministrador;
+					administrador.nome = (tabelaConsultaAdministradores.dataProvider.getItemAt(tabelaConsultaAdministradores.selectedIndex) as Administrador).nome;
+					administrador.sobrenome = (tabelaConsultaAdministradores.dataProvider.getItemAt(tabelaConsultaAdministradores.selectedIndex) as Administrador).sobrenome;
+					administrador.cpf = (tabelaConsultaAdministradores.dataProvider.getItemAt(tabelaConsultaAdministradores.selectedIndex) as Administrador).cpf;
+					administrador.rg = (tabelaConsultaAdministradores.dataProvider.getItemAt(tabelaConsultaAdministradores.selectedIndex) as Administrador).rg;
+					administrador.estadoCivil = (tabelaConsultaAdministradores.dataProvider.getItemAt(tabelaConsultaAdministradores.selectedIndex) as Administrador).estadoCivil;
+					administrador.sexo = (tabelaConsultaAdministradores.dataProvider.getItemAt(tabelaConsultaAdministradores.selectedIndex) as Administrador).sexo;		
+					administrador.dataNascimento = (tabelaConsultaAdministradores.dataProvider.getItemAt(tabelaConsultaAdministradores.selectedIndex) as Administrador).dataNascimento;		
+					administrador.telefone = (tabelaConsultaAdministradores.dataProvider.getItemAt(tabelaConsultaAdministradores.selectedIndex) as Administrador).telefone;
+					administrador.email = (tabelaConsultaAdministradores.dataProvider.getItemAt(tabelaConsultaAdministradores.selectedIndex) as Administrador).email;
+					administrador.endereco = DataBind.instance().enderecoPessoaFisicaSelecionada;
+					
+					administrador.ativo = true;
+					remoteObject.alteraAdministrador(administrador);
+					
+					DataBind.instance().enderecoPessoaFisicaSelecionada = null;
+					DataBind.instance().camposEnderecoEditavel = false;
+					dataNascimento = null;
+					remoteObject.listaAdministradores();
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Professores")
+				{
+					var professor:Professor = new Professor();
+					professor.codigoProfessor = (tabelaConsultaProfessor.dataProvider.getItemAt(tabelaConsultaProfessor.selectedIndex) as Professor).codigoProfessor;
+					professor.nome = (tabelaConsultaProfessor.dataProvider.getItemAt(tabelaConsultaProfessor.selectedIndex) as Professor).nome;
+					professor.sobrenome = (tabelaConsultaProfessor.dataProvider.getItemAt(tabelaConsultaProfessor.selectedIndex) as Professor).sobrenome;
+					professor.cpf = (tabelaConsultaProfessor.dataProvider.getItemAt(tabelaConsultaProfessor.selectedIndex) as Professor).cpf;
+					professor.rg = (tabelaConsultaProfessor.dataProvider.getItemAt(tabelaConsultaProfessor.selectedIndex) as Professor).rg;
+					professor.estadoCivil = (tabelaConsultaProfessor.dataProvider.getItemAt(tabelaConsultaProfessor.selectedIndex) as Professor).estadoCivil;
+					professor.sexo = (tabelaConsultaProfessor.dataProvider.getItemAt(tabelaConsultaProfessor.selectedIndex) as Professor).sexo;		
+					professor.dataNascimento = dataNascimento;		
+					professor.telefone = (tabelaConsultaProfessor.dataProvider.getItemAt(tabelaConsultaProfessor.selectedIndex) as Professor).telefone;
+					professor.email = (tabelaConsultaProfessor.dataProvider.getItemAt(tabelaConsultaProfessor.selectedIndex) as Professor).email;
+					professor.disciplinas = DataBind.instance().disciplinasProfessorSelecionado;
+					professor.endereco = DataBind.instance().enderecoPessoaFisicaSelecionada;
+					
+					professor.ativo = true;
+					remoteObject.alteraProfessor(professor);
+					
+					DataBind.instance().tabelaDisciplinaProfessorEditavel = false;
+					DataBind.instance().camposEnderecoEditavel = false;
+					DataBind.instance().enderecoPessoaFisicaSelecionada = null;
+					dataNascimento = null;
+					remoteObject.listaProfessores();
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Alunos")
+				{
+					var aluno:Aluno = new Aluno();
+					aluno.codigoAluno = (tabelaConsultaAluno.dataProvider.getItemAt(tabelaConsultaAluno.selectedIndex) as Aluno).codigoAluno;
+					aluno.nome = (tabelaConsultaAluno.dataProvider.getItemAt(tabelaConsultaAluno.selectedIndex) as Aluno).nome;
+					aluno.sobrenome = (tabelaConsultaAluno.dataProvider.getItemAt(tabelaConsultaAluno.selectedIndex) as Aluno).sobrenome;
+					aluno.matricula = (tabelaConsultaAluno.dataProvider.getItemAt(tabelaConsultaAluno.selectedIndex) as Aluno).matricula;
+					Alert.show(aluno.matricula);
+					aluno.cpf = (tabelaConsultaAluno.dataProvider.getItemAt(tabelaConsultaAluno.selectedIndex) as Aluno).cpf;
+					aluno.rg = (tabelaConsultaAluno.dataProvider.getItemAt(tabelaConsultaAluno.selectedIndex) as Aluno).rg;
+					aluno.estadoCivil = (tabelaConsultaAluno.dataProvider.getItemAt(tabelaConsultaAluno.selectedIndex) as Aluno).estadoCivil;
+					aluno.sexo = (tabelaConsultaAluno.dataProvider.getItemAt(tabelaConsultaAluno.selectedIndex) as Aluno).sexo;		
+					aluno.dataNascimento = dataNascimento;		
+					aluno.telefone = (tabelaConsultaAluno.dataProvider.getItemAt(tabelaConsultaAluno.selectedIndex) as Aluno).telefone;
+					aluno.email = (tabelaConsultaAluno.dataProvider.getItemAt(tabelaConsultaAluno.selectedIndex) as Aluno).email;
+					aluno.disciplinas = DataBind.instance().disciplinasAlunoSelecionado;
+					aluno.endereco = DataBind.instance().enderecoPessoaFisicaSelecionada;
+					
+					aluno.ativo = true;
+					remoteObject.alteraAluno(aluno);
+					
+					DataBind.instance().tabelaDisciplinaAlunoEditavel = false;
+					DataBind.instance().camposEnderecoEditavel = false;
+					DataBind.instance().enderecoPessoaFisicaSelecionada = null;
+					dataNascimento = null;
+					remoteObject.listaAlunos();
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Usuários")
+				{
+					var usuario:Usuario = new Usuario();
+					var pessoaFisica:PessoaFisica = new PessoaFisica();
+					usuario.codigoUsuario = (tabelaConsultaUsuario.dataProvider.getItemAt(tabelaConsultaUsuario.selectedIndex) as Usuario).codigoUsuario;
+					usuario.usuario = (tabelaConsultaUsuario.dataProvider.getItemAt(tabelaConsultaUsuario.selectedIndex) as Usuario).usuario;
+					usuario.senha = DataBind.instance().novaSenha;
+					
+					usuario.pessoaFisica = DataBind.instance().pessoaFisicaSelecionadaUsuario;
+					
+					usuario.ativo = true;
+					remoteObject.alteraUsuario(usuario);
+					DataBind.instance().tabelaUsuarioEditavel = false;
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Disciplinas")
+				{
+					var disciplina:Disciplina = new Disciplina();
+					disciplina.codigoDisciplina = (tabelaConsultaDisciplina.dataProvider.getItemAt(tabelaConsultaDisciplina.selectedIndex) as Disciplina).codigoDisciplina;
+					disciplina.nome = (tabelaConsultaDisciplina.dataProvider.getItemAt(tabelaConsultaDisciplina.selectedIndex) as Disciplina).nome;
+					
+					disciplina.ativo = true;
+					remoteObject.alteraDisciplina(disciplina);
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Cursos")
+				{
+					var curso:Curso = new Curso();
+					curso.codigoCurso = (tabelaConsultaCurso.dataProvider.getItemAt(tabelaConsultaCurso.selectedIndex) as Curso).codigoCurso;
+					curso.nome = (tabelaConsultaCurso.dataProvider.getItemAt(tabelaConsultaCurso.selectedIndex) as Curso).nome;
+					
+					curso.ativo = true;
+					remoteObject.alteraCurso(curso);
+				}
+			}
+			
+			public function removerDados():void
+			{
+				if (tabNavigatorConsulta.selectedChild.label == "Endereços")
+				{
+					var endereco:Endereco = new Endereco();
+					endereco.codigo = (tabelaConsultaEndereco.dataProvider.getItemAt(tabelaConsultaEndereco.selectedIndex) as Endereco).codigo;
+					remoteObject.deletaEndereco(endereco);
+					alendereco.removeAll();
+					remoteObject.listaEnderecos();
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Administradores")
+				{
+					var administrador:Administrador = new Administrador();
+					administrador.codigoAdministrador = (tabelaConsultaAdministradores.dataProvider.getItemAt(tabelaConsultaAdministradores.selectedIndex) as Administrador).codigoAdministrador;
+					administrador.codigoPessoaFisica = (tabelaConsultaAdministradores.dataProvider.getItemAt(tabelaConsultaAdministradores.selectedIndex) as Administrador).codigoPessoaFisica;
+					remoteObject.deletaAdministrador(administrador);
+					aladministrador.removeAll();
+					remoteObject.listaAdministradores();
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Professores")
+				{
+					var professor:Professor = new Professor();
+					professor.codigoProfessor = (tabelaConsultaProfessor.dataProvider.getItemAt(tabelaConsultaProfessor.selectedIndex) as Professor).codigoProfessor;
+					professor.codigoPessoaFisica = (tabelaConsultaProfessor.dataProvider.getItemAt(tabelaConsultaProfessor.selectedIndex) as Professor).codigoPessoaFisica;
+					remoteObject.deletaProfessor(professor);
+					alprofessor.removeAll();
+					remoteObject.listaProfessores();
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Alunos")
+				{
+					var aluno:Aluno = new Aluno();
+					aluno.codigoAluno = (tabelaConsultaAluno.dataProvider.getItemAt(tabelaConsultaAluno.selectedIndex) as Aluno).codigoAluno;
+					remoteObject.deletaAluno(aluno);
+					alaluno.removeAll();
+					remoteObject.listaAlunos();
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Usuários")
+				{
+					var usuario:Usuario = new Usuario();
+					usuario.codigoUsuario = (tabelaConsultaUsuario.dataProvider.getItemAt(tabelaConsultaUsuario.selectedIndex) as Usuario).codigoUsuario;
+					remoteObject.deletaUsuario(usuario);
+					alusuario.removeAll();
+					remoteObject.listaUsuarios();
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Disciplinas")
+				{
+					var disciplina:Disciplina = new Disciplina();
+					disciplina.codigoDisciplina = (tabelaConsultaDisciplina.dataProvider.getItemAt(tabelaConsultaDisciplina.selectedIndex) as Disciplina).codigoDisciplina;
+					remoteObject.deletaDisciplina(disciplina);
+					aldisciplinaConsulta.removeAll();
+					remoteObject.listaDisciplinasConsulta();
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Cursos")
+				{
+					var curso:Curso = new Curso();
+					curso.codigoCurso = (tabelaConsultaCurso.dataProvider.getItemAt(tabelaConsultaCurso.selectedIndex) as Curso).codigoCurso;
+					remoteObject.deletaCurso(curso);
+					aldisciplinaConsulta.removeAll();
+					remoteObject.listaCursos();
+				}
+			}
+			
+			public function cancelarEdicao():void
+			{
+				if (tabNavigatorConsulta.selectedChild.label == "Endereços")
+				{
+					tabelaConsultaEndereco.editable = false;
+					alendereco.removeAll();
+					remoteObject.listaEnderecos();
+					Alert.show("A edição para esta tabela foi cancelada!");
+				}
+				if (tabNavigatorConsulta.selectedChild.label == "Administradores")
+				{
+					tabelaConsultaAdministradores.editable = false;
+					DataBind.instance().camposEnderecoEditavel = false;
+					aladministrador.removeAll();
+					remoteObject.listaAdministradores();
+					Alert.show("A edição para esta tabela foi cancelada!");
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Professores")
+				{
+					tabelaConsultaProfessor.editable = false;
+					DataBind.instance().tabelaDisciplinaProfessorEditavel = false;
+					DataBind.instance().camposEnderecoEditavel = false;
+					alprofessor.removeAll();
+					remoteObject.listaProfessores();
+					Alert.show("A edição para esta tabela foi cancelada!");
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Alunos")
+				{
+					tabelaConsultaAluno.editable = false;
+					DataBind.instance().tabelaDisciplinaAlunoEditavel = false;
+					alprofessor.removeAll();
+					remoteObject.listaAlunos();
+					Alert.show("A edição para esta tabela foi cancelada!");
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Usuários")
+				{
+					tabelaConsultaUsuario.editable = false;
+					alusuario.removeAll();
+					remoteObject.listaUsuarios();
+					Alert.show("A edição para esta tabela foi cancelada!");
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Disciplinas")
+				{
+					tabelaConsultaDisciplina.editable = false;
+					aldisciplinaConsulta.removeAll();
+					remoteObject.listaDisciplinasConsulta();
+					Alert.show("A edição para esta tabela foi cancelada!");
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Cursos")
+				{
+					tabelaConsultaCurso.editable = false;
+					alcurso.removeAll();
+					remoteObject.listaCursos();
+					Alert.show("A edição para esta tabela foi cancelada!");
+				}
+			}
+			
+			
+			protected function verificaLinhaEditavel(event:DataGridEvent):void
+			{
+				// TODO Auto-generated method stub
+				if (event.rowIndex != rowNumber)
+				{
+					event.preventDefault();
+				}
+			}
+			
+			protected function resultadoUpdate(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				Alert.show("Dados salvos com sucesso!","Atenção");
+				if (tabNavigatorConsulta.selectedChild.label == "Endereços")
+				{
+					tabelaConsultaEndereco.editable = false;
+				}
+				if (tabNavigatorConsulta.selectedChild.label == "Administradores")
+				{
+					tabelaConsultaAdministradores.editable = false;
+				}
+				if (tabNavigatorConsulta.selectedChild.label == "Professores")
+				{
+					DataBind.instance().disciplinasProfessorSelecionado.removeAll();
+					tabelaConsultaProfessor.editable = false;
+				}
+				if (tabNavigatorConsulta.selectedChild.label == "Alunos")
+				{
+					DataBind.instance().disciplinasAlunoSelecionado.removeAll();
+					tabelaConsultaAluno.editable = false;
+				}
+				if (tabNavigatorConsulta.selectedChild.label == "Usuários")
+				{
+					DataBind.instance().novaSenha = "";
+					tabelaConsultaUsuario.editable = false;
+				}
+				if (tabNavigatorConsulta.selectedChild.label == "Disciplinas")
+				{
+					tabelaConsultaDisciplina.editable = false;
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Cursos")
+				{
+					tabelaConsultaCurso.editable = false;
+				}
+			}
+			
+			protected function resultadoDelete(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				Alert.show("Dados removidos com sucesso!","Atenção");
+			}
+			
+			protected function buscar(event:Event):void
+			{
+				// TODO Auto-generated method stub
+				if (tabNavigatorConsulta.selectedChild.label == "Endereços")
+				{
+					if (campoConsultaEndereco.text != "")
+					{
+						alendereco.removeAll();
+						remoteObject.buscaEndereco(campoConsultaEndereco.text);
+					}
+					else {
+						remoteObject.listaEnderecos();
+					}
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Administradores")
+				{
+					if (campoConsultaAdministradores.text != "")
+					{
+						aladministrador.removeAll();
+						remoteObject.buscaAdministrador(campoConsultaAdministradores.text);
+					}
+					else {
+						remoteObject.listaAdministradores();
+					}
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Professores")
+				{
+					if (campoConsultaProfessor.text != "")
+					{
+						alprofessor.removeAll();
+						remoteObject.buscaProfessor(campoConsultaProfessor.text);
+					}
+					else {
+						remoteObject.listaProfessores();
+					}
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Alunos")
+				{
+					if (campoConsultaAluno.text != "")
+					{
+						alaluno.removeAll();
+						remoteObject.buscaAluno(campoConsultaAluno.text);
+					}
+					else {
+						remoteObject.listaAlunos();
+					}
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Usuários")
+				{
+					if (campoConsultaUsuario.text != "")
+					{
+						alusuario.removeAll();
+						remoteObject.buscaUsuario(campoConsultaUsuario.text);
+					}
+					else {
+						remoteObject.listaUsuarios();
+					}
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Disciplinas")
+				{
+					if (campoConsultaDisciplina.text != "")
+					{
+						aldisciplinaConsulta.removeAll();
+						remoteObject.buscaDisciplina(campoConsultaDisciplina.text);
+					}
+					else {
+						remoteObject.listaDisciplinasConsulta();
+					}
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Cursos")
+				{
+					if (campoConsultaCurso.text != "")
+					{
+						alcurso.removeAll();
+						remoteObject.buscaCurso(campoConsultaCurso.text);
+					}
+					else {
+						remoteObject.listaCursos();
+					}
+				}
+			}
+			
+			public function listaCidadesTabela(event:Event):void
+			{
+				remoteObject.listaCidades(event.currentTarget.selectedItem);
+				DataBind.instance().mudouEstado = true;
+				CursorManager.setBusyCursor();
+				colunacidade.editable = false;
+			}
+			
+			public function clickHandler(event:Event):void
+			{
+				//Alert.show(event.currentTarget.selectedItem);
+				itemSelecionado = event.currentTarget.selectedItem;
+				
+			}
+			
+			
+			// De cidades
+			public function clickHandler2(event:Event):void
+			{
+				itemSelecionado = event.currentTarget.selectedItem;
+				
+			}
+			
+			public function verificaMudouCidade (event:Event):void
+			{
+				DataBind.instance().mudouCidade = true;
+			}
+			
+			
+			protected function resultadoAdministradores(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var cont:int;
+				var administrador:Administrador;
+				aladministrador.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; al.length; cont++)
+				{
+					administrador = al.getItemAt(cont) as Administrador;
+					aladministrador.addItem(administrador);
+				}
+			}
+			
+			public function selecionaLinha():void
+			{
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Professores")
+				{
+					DataBind.instance().pessoaLinhaSelecionada.nome = tabelaConsultaProfessor.selectedItem.nome;
+					DataBind.instance().pessoaLinhaSelecionada.sobrenome = tabelaConsultaProfessor.selectedItem.sobrenome;
+					DataBind.instance().pessoaLinhaSelecionada.codigoPessoa = tabelaConsultaProfessor.selectedItem.codigoPessoa;
+					
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Alunos")
+				{
+					DataBind.instance().pessoaLinhaSelecionada.nome = tabelaConsultaAluno.selectedItem.nome;
+					DataBind.instance().pessoaLinhaSelecionada.sobrenome = tabelaConsultaAluno.selectedItem.sobrenome;
+					DataBind.instance().pessoaLinhaSelecionada.codigoPessoa = tabelaConsultaAluno.selectedItem.codigoPessoa;
+					
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Administradores")
+				{
+					DataBind.instance().pessoaLinhaSelecionada.nome = tabelaConsultaAdministradores.selectedItem.nome;
+					DataBind.instance().pessoaLinhaSelecionada.nome = tabelaConsultaAdministradores.selectedItem.sobrenome;
+					DataBind.instance().pessoaLinhaSelecionada.codigoPessoa = tabelaConsultaAdministradores.selectedItem.codigoPessoa;
+				}
+			}
+			
+			public function selecionaLinhaUsuario():void
+			{
+				DataBind.instance().usuarioLinhaSelecionada = tabelaConsultaUsuario.selectedItem as Usuario;
+			}
+			
+			
+			protected function resultadoProfessores(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var cont:int;
+				var professor:Professor;
+				alprofessor.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; al.length; cont++)
+				{
+					professor = al.getItemAt(cont) as Professor;
+					alprofessor.addItem(professor);
+				}
+			}
+			
+			protected function resultadoAlunos(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var cont:int;
+				var aluno:Aluno;
+				alaluno.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; al.length; cont++)
+				{
+					aluno = al.getItemAt(cont) as Aluno;
+					alaluno.addItem(aluno);
+				}
+			}
+			
+			protected function resultadoUsuarios(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var cont:int;
+				var usuario:Usuario;
+				alusuario.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; al.length; cont++)
+				{
+					usuario = al.getItemAt(cont) as Usuario;
+					alusuario.addItem(usuario);
+				}
+			}
+			
+			protected function resultadoDisciplinasConsulta(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var cont:int;
+				var disciplina:Disciplina;
+				aldisciplinaConsulta.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; al.length; cont++)
+				{
+					disciplina = al.getItemAt(cont) as Disciplina;
+					aldisciplinaConsulta.addItem(disciplina);
+				}
+			}
+		
+			
+			public function campoDataNascimentoProfessor_focusOutHandler(event:FocusEvent):void
+			{
+				// TODO Auto-generated method stub
+				if (this.selectedChild.label == "Cadastros")
+				{
+					if (!DateValidator.doValidation(campoDataNascimentoProfessor.text))
+					{
+						Alert.show("Data Inválida!", "Atenção");
+					}
+				}
+				if (this.selectedChild.label == "Consultas e Relatórios")
+				{
+					if (!DateValidator.doValidation(event.currentTarget.text))
+					{ 
+						Alert.show("Data Inválida!", "Atenção");
+						tabelaConsultaProfessor.selectedItem.dataNascimento = "";
+					}
+					else 
+					{
+						var d:Date = DateField.stringToDate(event.currentTarget.text, "DD/MM/YYYY");
+						dataNascimento = d;
+					}
+				}
+				
+			}
+			
+			public function campoDataNascimentoAdministrador_focusOutHandler(event:FocusEvent):void
+			{
+				// TODO Auto-generated method stub
+				if (this.selectedChild.label == "Cadastros")
+				{
+					if (!DateValidator.doValidation(campoDataNascimentoAdministrador.text))
+					{
+						Alert.show("Data Inválida!", "Atenção");
+					}
+				}
+				if (this.selectedChild.label == "Consultas e Relatórios")
+				{
+					if (!DateValidator.doValidation(event.currentTarget.text))
+					{ 
+						Alert.show("Data Inválida!", "Atenção");
+						tabelaConsultaAdministradores.selectedItem.dataNascimento = "";
+					}
+						
+					else 
+					{
+						var d:Date = DateField.stringToDate(event.currentTarget.text, "DD/MM/YYYY");
+						dataNascimento = d;
+					}
+				}
+			}
+			
+			protected function tabelaConsulta_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				if (tabNavigatorConsulta.selectedChild.label == "Professores")
+				{
+					DataBind.instance().enderecoPessoaFisicaSelecionada = tabelaConsultaProfessor.selectedItem.endereco;
+					
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Alunos")
+				{
+					DataBind.instance().enderecoPessoaFisicaSelecionada = tabelaConsultaAluno.selectedItem.endereco;
+					
+				}
+				
+				if (tabNavigatorConsulta.selectedChild.label == "Administradores")
+				{
+					DataBind.instance().enderecoPessoaFisicaSelecionada = tabelaConsultaAdministradores.selectedItem.endereco;
+					
+				}
+			}
+			
+			protected function campoDataNascimentoAluno_focusOutHandler(event:FocusEvent):void
+			{
+				// TODO Auto-generated method stub
+				if (this.selectedChild.label == "Cadastros")
+				{
+					if (!DateValidator.doValidation(campoDataNascimentoAluno.text))
+					{
+						Alert.show("Data Inválida!", "Atenção");
+					}
+				}
+				if (this.selectedChild.label == "Consultas e Relatórios")
+				{
+					if (!DateValidator.doValidation(event.currentTarget.text))
+					{ 
+						Alert.show("Data Inválida!", "Atenção");
+						tabelaConsultaAluno.selectedItem.dataNascimento = "";
+					}
+						
+					else 
+					{
+						var d:Date = DateField.stringToDate(event.currentTarget.text, "DD/MM/YYYY");
+						dataNascimento = d;
+					}
+				}
+			}
+			
+			protected function resultadoPessoasFisicas(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var cont:int;
+				var pessoaFisica:PessoaFisica;
+				var nome:String;
+				al = event.result as ArrayCollection;
+				for (cont = 0; al.length; cont++)
+				{
+					pessoaFisica = al.getItemAt(cont) as PessoaFisica;
+					nome = nivel + pessoaFisica.nome;
+					alnome.addItem(pessoaFisica.nome);
+					alnome1.addItem(pessoaFisica.nome);
+					alsobrenome.addItem(pessoaFisica.sobrenome);
+					alcpf.addItem(pessoaFisica.cpf);
+					
+				}
+			}
+			
+			
+			public function alteraSobrenome(event:Event):void
+			{
+				//Alert.show(alsobrenome.getItemAt(tabelaConsultaUsuario.selectedIndex).toString());
+				tabelaConsultaUsuario.selectedItem.sobrenome = alsobrenome.getItemAt(tabelaConsultaUsuario.selectedIndex).toString();
+			}
+			
+			
+			protected function setaSobrenome(event:IndexChangeEvent):void
+			{
+				// TODO Auto-generated method stub
+				campoSobrenome.text = alsobrenome.getItemAt(campoNomeUsuario.selectedIndex).toString();
+				campoCPFUsuario.text = alcpf.getItemAt(campoNomeUsuario.selectedIndex).toString();
+			}
+			
+			protected function carregaMontagemTurmas(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				remoteObject.listaCursos();
+			}
+			
+			protected function ConcluirCursos(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				if (campoNomeCurso.text == "")
+				{
+					Alert.show("Preencha todos os campos macardos com *. Eles são obrigatórios!","Atenção");
+				}
+				else {
+					var curso:Curso = new Curso();
+					curso.nome = campoNomeCurso.text;
+					curso.ativo = true;
+					
+					remoteObject.cadastraCurso(curso);
+				}
+			}
+			
+			protected function resultadoCursos(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var cont:int;
+				var curso:Curso;
+				alcursonome.removeAll();
+				alcurso.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; al.length; cont++)
+				{
+					curso = al.getItemAt(cont) as Curso;
+					alcurso.addItem(curso);
+					alcursonome.addItem(curso.nome);
+				}
+			}
+			
+			protected function carregaProfessor(event:IndexChangeEvent):void
+			{
+				// TODO Auto-generated method stub
+				remoteObject.listaProfessorPorCurso(alcursonome.getItemAt(comboCursoTurmas.selectedIndex).toString());
+				comboProfessorTurmas.enabled = true;
+			}
+			
+			protected function resultadoProfessoresPorCurso(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var cont:int;
+				var professor:Professor;
+				alprofessornome.removeAll();
+				alprofessorsobrenome.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; al.length; cont++)
+				{
+					professor = al.getItemAt(cont) as Professor;
+					alprofessornome.addItem(professor.nome);
+					alprofessorsobrenome.addItem(professor.sobrenome);
+				}
+			}
+			
+			protected function carregaDisciplinaPorProfessor(event:IndexChangeEvent):void
+			{
+				// TODO Auto-generated method stub
+				remoteObject.listaDisciplinaProfessores(alprofessornome.getItemAt(comboProfessorTurmas.selectedIndex).toString(), alprofessorsobrenome.getItemAt(comboProfessorTurmas.selectedIndex).toString());
+				comboDisciplinaTurmas.enabled = true;
+			}
+			
+			protected function resultadoDisciplinaProfessores(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var cont:int;
+				var disciplina:Disciplina;
+				aldisciplinanome.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; al.length; cont++)
+				{
+					disciplina = al.getItemAt(cont) as Disciplina;
+					aldisciplinanome.addItem(disciplina.nome);
+				}
+			}
+			
+			protected function carregaTabelaAlunos(event:IndexChangeEvent):void
+			{
+				// TODO Auto-generated method stub
+				remoteObject.listaAlunosPorTurma(campoAnoTurmas.text, comboCursoTurmas.selectedItem, comboProfessorTurmas.selectedItem, alprofessorsobrenome.getItemAt(comboProfessorTurmas.selectedIndex) as String, comboDisciplinaTurmas.selectedItem);
+			}
+		
+			
+			protected function abreTelaTabelaAluno(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				var painel:TelaTabelaAluno = TelaTabelaAluno(PopUpManager.createPopUp(this, TelaTabelaAluno, true));
+				painel.addEventListener(OKEvent.OK, onPopUpCloseAluno, false, 0, true);
+				PopUpManager.centerPopUp(painel);
+			}
+			
+			private function onPopUpCloseAluno(evento:OKEvent):void
+			{
+				alalunoturma.addItem(DataBind.instance().alunoPopUp);
+			}
+			
+			protected function ConcluirTurma(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				if (campoAnoTurmas.text == "" || comboCursoTurmas.selectedIndex == -1 || comboProfessorTurmas.selectedIndex == -1 || comboDisciplinaTurmas.selectedIndex == -1)
+				{
+					Alert.show("Preencha todos os dados marcados com *. Eles são obrigatórios!");
+				}
+				else
+				{
+					
+					var turma:Turma = new Turma();
+					var curso:Curso = new Curso ();
+					var professor:Professor = new Professor();
+					var disciplina:Disciplina = new Disciplina();
+					
+					turma.ano = campoAnoTurmas.text;
+					
+					curso.nome = comboCursoTurmas.selectedItem as String;
+					turma.curso = curso;
+					
+					professor.nome = comboProfessorTurmas.selectedItem as String;
+					professor.sobrenome = alprofessorsobrenome.getItemAt(comboProfessorTurmas.selectedIndex).toString();
+					turma.professor = professor;
+					
+					disciplina.nome = comboDisciplinaTurmas.selectedItem as String;
+					turma.disciplina = disciplina;
+				
+					turma.aluno.addAll(alalunoturma);
+					remoteObject.cadastraTurma(turma);
+					
+				}
+			}
+			
+			protected function carregaCurso(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				alcursonome.removeAll();
+				remoteObject.listaCursos();
+				
+			}
+			
+			protected function resultadoAlunosTurma(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var cont:int;
+				var aluno:Aluno;
+				alalunoturma.removeAll();
+				al = event.result as ArrayCollection;
+				for (cont = 0; al.length; cont++)
+				{
+					aluno = al.getItemAt(cont) as Aluno;
+					alalunoturma.addItem(aluno);
+				}
+			}
+			
+			protected function removeAluno(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				if (tabelaAlunosTurma.selectedIndex == -1)
+				{
+					Alert.show("Selecione um aluno para remover!");
+				}
+				else {
+					alalunoturma.removeItemAt(tabelaAlunosTurma.selectedIndex);
+			
+				}
+			}
+			
+			protected function LimparTurma():void
+			{
+				// TODO Auto-generated method stub
+				campoAnoTurmas.text = "";
+				comboCursoTurmas.selectedIndex = -1;
+				comboProfessorTurmas.selectedIndex = -1;
+				comboDisciplinaTurmas.selectedIndex = -1;
+				alalunoturma.removeAll();
+			}
+			
+			protected function chamaTabelaCurso(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				alcomboCurso.removeAll();
+				var painel:TelaTabelaCurso = TelaTabelaCurso(PopUpManager.createPopUp(this, TelaTabelaCurso, true));
+				painel.addEventListener(OKEvent.OK, onPopUpCloseCurso, false, 0, true);
+				PopUpManager.centerPopUp(painel);
+			}
+			
+			private function onPopUpCloseCurso(evento:OKEvent):void
+			{
+				
+				if (!alcomboCurso.contains(DataBind.instance().cursoPopUp.nome))
+				{
+					alcomboCurso.addItem(DataBind.instance().cursoPopUp.nome);
+					comboCursoProfessor.selectedIndex = 1;
+					remoteObject.listaDisciplinaPorCursos(alcomboCurso);
+				}
+				else {
+					Alert.show("Curso repetido!", "Atenção");
+				}
+				
+			}
+			
+			protected function novoCurso(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				tabNavigatorControle.selectedIndex = 5;
+			}
+			
+			protected function removerCurso(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				alcomboCurso.removeItemAt(comboCursoProfessor.selectedIndex);
+				remoteObject.listaDisciplinaPorCursos(alcomboCurso);
+			}
+			
+			
+		]]>
+	</fx:Script>
+	<fx:Script source="../../controle/scripts/Controle.as" />
+	<mx:states>
+		<s:State name="ViewAdministrador"/>
+		<s:State name="ViewNormal"/>
+	</mx:states>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<s:RemoteObject id="remoteObject" destination="FlexRemoto" fault="falha(event)">
+			<s:method name="cadastraAdministrador" result="resultado(event);" fault="falha(event)" />
+			<s:method name="cadastraProfessor" result="resultado(event)" fault="falha(event)" />
+			<s:method name="cadastraUsuario" result="resultado(event)" fault="falha(event)" />
+			<s:method name="cadastraEndereco" result="resultado(event)" fault="falha(event)" />
+			<s:method name="cadastraDisciplina" result="resultado(event)" fault="falha(event)" />
+			<s:method name="cadastraAluno" result="resultado(event)" fault="falha(event)" />
+			<s:method name="cadastraCurso" result="resultado(event)" fault="falha(event)" />
+			<s:method name="cadastraTurma" result="resultado(event)" fault="falha(event)" />
+			<s:method name="listaCidades" result="resultadoCidades(event)" fault="falha(event)" />
+			<s:method name="listaEstados" result="resultadoEstados(event);" fault="falha(event)" />
+			<s:method name="listaPessoasFisicasSemUsuario" result="resultadoPessoasFisicas(event)" fault="falha(event)" />
+			<s:method name="listaDisciplinas" result="resultadoDisciplinas(event);" fault="falha(event)" />
+			<s:method name="listaDisciplinaPorCursos" result="resultadoDisciplinaPorCursos(event);" fault="falha(event)" />
+			<s:method name="listaEnderecos" result="resultadoEnderecos(event)" fault="falha(event)" />
+			<s:method name="listaAdministradores" result="resultadoAdministradores(event)" fault="falha(event)" />
+			<s:method name="listaProfessores" result="resultadoProfessores(event)" fault="falha(event)" />
+			<s:method name="listaDisciplinasConsulta" result="resultadoDisciplinasConsulta(event)" fault="falha(event)" />
+			<s:method name="listaDisciplinaProfessores" result="resultadoDisciplinaProfessores(event)" fault="falha(event)" />
+			<s:method name="listaAlunos" result="resultadoAlunos(event)" fault="falha(event)" />
+			<s:method name="listaAlunosPorTurma" result="resultadoAlunosTurma(event)" />
+			<s:method name="listaCursos" result="resultadoCursos(event)" fault="falha(event)" />
+			<s:method name="listaUsuarios" result="resultadoUsuarios(event)" fault="falha(event)" />
+			<s:method name="listaProfessorPorCurso" result="resultadoProfessoresPorCurso(event)" fault="falha(event)" />
+			<s:method name="buscaEndereco" result="resultadoEnderecos(event)" fault="falha(event)" />
+			<s:method name="buscaAdministrador" result="resultadoAdministradores(event)" fault="falha(event)" />
+			<s:method name="buscaProfessor" result="resultadoProfessores(event)" fault="falha(event)" />
+			<s:method name="buscaAluno" result="resultadoAlunos(event)" fault="falha(event)" />
+			<s:method name="buscaUsuario" result="resultadoUsuarios(event)" fault="falha(event)" />
+			<s:method name="buscaDisciplina" result="resultadoDisciplinasConsulta(event)" fault="falha(event)" />
+			<s:method name="buscaCurso" result="resultadoCursos(event)" fault="falha(event)" />
+			<s:method name="alteraEndereco" result="resultadoUpdate(event)" fault="falha(event)" />
+			<s:method name="alteraAdministrador" result="resultadoUpdate(event)" fault="falha(event)" />
+			<s:method name="alteraProfessor" result="resultadoUpdate(event)" fault="falha(event)" />
+			<s:method name="alteraAluno" result="resultadoUpdate(event)" fault="falha(event)" />
+			<s:method name="alteraUsuario" result="resultadoUpdate(event)" fault="falha(event)" />
+			<s:method name="alteraDisciplina" result="resultadoUpdate(event)" fault="falha(event)" />
+			<s:method name="alteraCurso" result="resultadoUpdate(event)" fault="falha(event)" />
+			<s:method name="deletaEndereco" result="resultadoDelete(event)" fault="falha(event)" />
+			<s:method name="deletaAdministrador" result="resultadoDelete(event)" fault="falha(event)" />
+			<s:method name="deletaProfessor" result="resultadoDelete(event)" fault="falha(event)" />
+			<s:method name="deletaAluno" result="resultadoDelete(event)" fault="falha(event)" />
+			<s:method name="deletaUsuario" result="resultadoDelete(event)" fault="falha(event)" />
+			<s:method name="deletaDisciplina" result="resultadoDelete(event)" fault="falha(event)" />
+			<s:method name="alteraCurso" result="resultadoUpdate(event)" fault="falha(event)" />
+			<s:method name="getPessoaFisicaByCPF" result="resultadoPessoaFisica(event)" fault="falhaPessoaFisica(event)" />
+		</s:RemoteObject>
+		
+		<mx:DateFormatter id="dateFormat" formatString="DD/MM/YYYY"/>
+	</fx:Declarations>
+		<s:NavigatorContent id="navigatorContent" includeIn="ViewAdministrador" width="100%"
+							height="100%" label="Cadastros">
+			<mx:TabNavigator x="12" y="6" width="1034" height="504" id="tabNavigatorControle">
+				
+				
+				<s:NavigatorContent id="tav" width="100%" height="100%" label="Administradores" >
+					<s:Panel id="painelAdministradores" x="72" y="10" width="888" height="385">
+						<s:Form x="0" y="0" width="886" height="352">
+							<s:layout>
+								<s:BasicLayout/>
+							</s:layout>
+							<s:Label x="21" y="14" text="* Nome:"/>
+							<componente:MasterTextInput id="campoNomeAdministrador"  restrict="a-zA-Z 0-9 \.\-\ç\Ç\ã\Ã\á\Á\ó\Ó\í\Í\é\É\ú\Ú\õ\Õ\ª\º" x="21" y="34" width="207"/>
+							<s:Label x="240" y="13" text="* Sobrenome:"/>
+							<componente:MasterTextInput id="campoSobreNomeAdministrador"  restrict="a-zA-Z 0-9 \.\-\ç\Ç\ã\Ã\á\Á\ó\Ó\í\Í\é\É\ú\Ú\õ\Õ\ª\º" x="236" y="34" width="250"/>
+							<s:Label x="498" y="13" text="* CPF:"/>
+							<componente:MasterTextInput id="campoCPFAdministrador" focusOut="campoCPFAdministrador_focusOutHandler(event)" x="494" y="34" width="169" onlyRestrict="number" blankMaskChar=" " inputMask="999.999.999-99"/>
+							<s:Label x="671" y="15" text="* Telefone:"/>
+							<componente:MasterTextInput id="campoTelefoneAdministrador" focusOut="campoTelefoneAdministrador_focusOutHandler(event)" inputMask="(99)9999-9999"  blankMaskChar=" " x="671" y="34" width="193" validationLanguage="portuguese"/>
+							<s:Label x="26" y="65" text="* RG:"/>
+							<componente:MasterTextInput id="campoRGAdministrador" restrict="a-zA-Z 0-9 \-\." x="21" y="84" width="127"/>
+							<s:Label x="156" y="64" text="* Data de Nascimento:"/>
+							<mx:DateField id="campoDataNascimentoAdministrador" x="156" y="84"
+										  width="152" dayNames="{['D','S','T','Q','Q','S','S']}"
+										  editable="true" formatString="DD/MM/YYYY" focusOut="campoDataNascimentoAdministrador_focusOutHandler(event)"
+										  monthNames="['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']"/>
+							<s:Label x="320" y="64" text="E-mail:"/>
+							<componente:MasterTextInput id="campoEmailAdministrador"  restrict="a-zA-Z 0-9 \.\-\_\@" x="316" y="84" width="166" focusOut="campoEmailAdministrador_focusOutHandler(event)" />
+							<s:Label x="494" y="65" text="* Sexo:"/>
+							<s:ComboBox id="comboSexoAdministrador" x="490" y="84" width="173" prompt="Escolha um sexo...">
+								<s:ArrayCollection>
+									<fx:String>MASCULINO</fx:String>
+									<fx:String>FEMININO</fx:String>
+								</s:ArrayCollection>
+							</s:ComboBox>
+							<s:Label x="671" y="64" text="* Estado Civil:"/>
+							<s:ComboBox id="comboEstadoCivilAdministrador" x="673" y="84" width="191" prompt="Escolha um estado civil...">
+								<s:ArrayCollection>
+									<fx:String>SOLTEIRO(A)</fx:String>
+									<fx:String>CASADO(A)</fx:String>
+									<fx:String>DIVORCIADO(A)</fx:String>
+									<fx:String>VIÚVO(A)</fx:String>
+								</s:ArrayCollection>
+							</s:ComboBox>
+							<s:Label x="20" y="132" text="* Endereço:"/>
+							<s:BorderContainer id="painelEnderecoAdministrador" x="20" y="152" width="843"
+											   height="133">
+								<s:Label x="10" y="18" text="Rua:"/>
+								<componente:MasterTextInput id="campoRuaAdministrador" x="10" y="38"
+															width="367" dropShadowVisible="false"
+															editable="false"/>
+								<s:Label x="390" y="18" text="Bairro:"/>
+								<componente:MasterTextInput id="campoBairroAdministrador" x="390"
+															y="38" width="302" editable="false"/>
+								<s:Label x="700" y="14" text="Número:"/>
+								<componente:MasterTextInput id="campoNumeroAdministrador" x="700"
+															y="38" width="108" editable="false"/>
+								<s:Label x="10" y="75" text="Complemento:"/>
+								<componente:MasterTextInput id="campoComplementoAdministrador" x="10"
+															y="95" width="315" editable="false"/>
+								<s:Label x="329" y="75" text="CEP:"/>
+								<componente:MasterTextInput id="campoCEPAdministrador" x="329" y="95"
+															width="213" 
+															editable="false"/>
+								<s:Label x="547" y="75" text="Estado:"/>
+								<s:Label x="649" y="74" text="Cidade:"/>
+								<componente:MasterTextInput id="campoEstadoAdministrador" x="550"
+															y="94" width="74" editable="false"/>
+								<componente:MasterTextInput id="campoCidadeAdministrador" x="649"
+															y="94" width="159" editable="false"/>
+							</s:BorderContainer>
+							<s:Button id="botaoConcluirAdministradores" x="21" y="303" width="76" label="Concluir"
+									  click="ConcluirAdministradores()"/>
+							<s:Button id="botaoLimparAdministradores" x="105" y="303" width="76" label="Limpar"
+									  click="exibeAlert()"/>
+							<s:Image x="830" y="115" width="30" height="32"
+									 source="@Embed('../../assets/images/pesquisar.png')" click="chamaTabelaEnderecos(event)" toolTip="Clique para procurar por um endereço existente"/>
+							<s:Image x="789" y="115" width="33" height="32" toolTip="Clique para adicionar um novo endereço" click="novoEndereco(event)"
+									 source="@Embed('../../assets/images/add.png')" />
+						</s:Form>
+					</s:Panel>
+				</s:NavigatorContent>
+				
+				<s:NavigatorContent width="100%" height="100%" label="Professores">
+					
+					<s:Panel x="71" y="0" width="899" height="452">
+						<s:Form x="0" y="-34" width="890" height="452">
+							<s:layout>
+								<s:BasicLayout/>
+							</s:layout>
+							<s:Label x="10" y="18" text="* Nome:"/>
+							<componente:MasterTextInput id="campoNomeProfessor"  restrict="a-zA-Z 0-9 \.\-\ç\Ç\ã\Ã\á\Á\ó\Ó\í\Í\é\É\ú\Ú\õ\Õ\ª\º" x="10" y="37" width="263"/>
+							<s:Label x="316" y="17" text="* Sobrenome:"/>
+							<componente:MasterTextInput id="campoSobreNomeProfessor"  restrict="a-zA-Z 0-9 \.\-\ç\Ç\ã\Ã\á\Á\ó\Ó\í\Í\é\É\ú\Ú\õ\Õ\ª\º" x="316" y="36" width="255"/>
+							<s:Label x="11" y="66" text="* CPF:"/>
+							<componente:MasterTextInput id="campoCPFProfessor" x="9" inputMask="999.999.999-99" onlyRestrict="number" focusOut="campoCPFProfessor_focusOutHandler(event)" blankMaskChar=" " y="85" width="185"/>
+							<s:Label x="216" y="66" text="* RG:"/>
+							<componente:MasterTextInput id="campoRGProfessor" restrict="a-z A-Z 0-9 \.\-" x="216" y="85" width="168"/>
+							<s:Label x="388" y="64" height="14" text="* Telefone:"/>
+							<componente:MasterTextInput id="campoTelefoneProfessor" inputMask="(99)9999-9999" blankMaskChar=" " focusOut="campoTelefoneProfessor_focusOutHandler(event)" onlyRestrict="number" x="392" y="84" width="177"/>
+							<s:Label x="10" y="119" text="* Sexo:"/>
+							<s:ComboBox id="comboSexoProfessor" x="10" y="139" width="244" selectedIndex="-1" prompt="Escolha um sexo... ">
+								<s:ArrayCollection>
+									<fx:String>MASCULINO</fx:String>
+									<fx:String>FEMININO</fx:String>
+								</s:ArrayCollection>	
+							</s:ComboBox>
+							<s:Label x="287" y="121" text="E-mail:"/>
+							<componente:MasterTextInput id="campoEmailProfessor" x="287" y="140" restrict="a-zA-Z 0-9 \.\-\_\@" width="221" focusOut="campoEmailProfessor_focusOutHandler(event)"/>
+							<s:Label x="10" y="170" text="* Estado Civil:"/>
+							<s:ComboBox id="comboEstadoCivilProfessor" x="10" y="190" width="244" selectedIndex="-1" prompt="Escolha um estado civil...">
+								<s:ArrayCollection>
+									<fx:String>SOLTEIRO(A)</fx:String>
+									<fx:String>CASADO(A)</fx:String>
+									<fx:String>DIVORCIADO(A)</fx:String>
+									<fx:String>VIÚVO(A)</fx:String>
+								</s:ArrayCollection>	
+							</s:ComboBox>
+							<s:Label x="287" y="174" text="* Data de Nascimento:"/>
+							<mx:DateField id="campoDataNascimentoProfessor" x="287" y="193"
+										  width="220" dayNames="{['D','S','T','Q','Q','S','S']}"
+										  editable="true" formatString="DD/MM/YYYY" focusOut="campoDataNascimentoProfessor_focusOutHandler(event)"
+										  monthNames="['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']"/>
+							<s:Label x="10" y="256" text="* Endereço:"/>
+							<s:BorderContainer id="painelEnderecoProfessor" x="10" y="276"
+											   width="859" height="130">
+								<s:Label x="21" y="14" text="Rua:"/>
+								<componente:MasterTextInput id="campoRuaProfessor" x="21" y="34"
+															width="367" editable="false"/>
+								<s:Label x="401" y="14" text="Bairro:"/>
+								<componente:MasterTextInput id="campoBairroProfessor" x="401" y="34"
+															width="302" editable="false"/>
+								<s:Label x="722" y="14" text="Número:"/>
+								<componente:MasterTextInput id="campoNumeroProfessor" x="722" y="34"
+															width="105" editable="false"/>
+								<s:Label x="21" y="71" text="Complemento:"/>
+								<componente:MasterTextInput id="campoComplementoProfessor" x="21"
+															y="91" width="315" editable="false"/>
+								<s:Label x="351" y="72" text="CEP:"/>
+								<componente:MasterTextInput id="campoCEPProfessor" x="351" y="91"
+															width="213" editable="false"/>
+								<s:Label x="665" y="71" text="Cidade:"/>
+								<componente:MasterTextInput id="campoCidadeProfessor" x="665" y="91"
+															width="162" editable="false"/>
+								<s:Label x="572" y="71" text="Estado:"/>
+								<componente:MasterTextInput id="campoEstadoProfessor" x="572" y="91"
+															width="84" editable="false"/>
+							</s:BorderContainer>
+							<s:Image x="788" y="242" width="30" height="32"
+									 source="@Embed('../../assets/images/pesquisar.png')" click="chamaTabelaEnderecos(event)" toolTip="Clique para procurar por um endereço existente"/>
+							<s:Image x="826" y="242" width="33" height="32" toolTip="Clique para adicionar um novo endereço" click="novoEndereco(event)"
+									 source="@Embed('../../assets/images/add.png')"/>
+							<s:Button id="botaoConcluirProfessor" x="9" y="418" width="76"
+									  label="Concluir" click="ConcluirProfessores()"/>
+							<s:Button id="botaoLimparProfessor" x="93" y="418" width="76"
+									  label="Limpar" click="exibeAlert()"/>
+							<s:BorderContainer x="591" y="13" width="286" height="42" creationComplete="carregaCurso(event)" toolTip="Adicione os cursos para o qual este professor dá aula">
+								<s:Label x="8" y="19" text="* Curso:"/>
+								<s:ComboBox id="comboCursoProfessor" x="60" y="10" width="157"
+											dataProvider="{alcomboCurso}" />
+								<s:Image x="242" y="14" width="19" height="17" toolTip="Clique para cadastrar um novo curso" click="novoCurso(event)"
+										 source="@Embed('../../assets/images/add.png')"/>
+								<s:Image x="260" y="14" width="19" height="17" toolTip="Clique para remover o curso selecionado" click="removerCurso(event)"
+										 source="@Embed('../../assets/images/remove.png')"/>
+								<s:Image x="229" y="11" width="13" height="24"
+										 source="@Embed('../../assets/images/pesquisar.png')" click="chamaTabelaCurso(event)" toolTip="Clique para adicionar uma instituição existente"/>
+							</s:BorderContainer>
+							<s:Label x="591" y="63" height="17" text="* Disciplinas Ministradas:"/>
+							<s:BorderContainer id="panelDisciplinasProfessor" x="591" y="78"
+											   width="286" height="159">
+								<s:DataGrid id="tabelaDisciplinasProfessor" x="8" y="10" width="270"
+											height="73" requestedRowCount="4" dataProvider="{altabelaPrf}">
+									<s:columns>
+										<s:ArrayList>
+											<s:GridColumn dataField="nome"
+														  headerText="Disciplina"></s:GridColumn>
+										</s:ArrayList>
+									</s:columns>
+								</s:DataGrid>
+								<s:Label x="10" y="91" height="17" text="Disciplinas cadastradas:"/>
+								<s:ComboBox id="comboDisciplinasProfessor" x="10" y="116" width="122"
+											selectedIndex="-1" dataProvider="{aldisciplinaCurso}" />
+								<s:Button id="botaoAdicionarDisicplinaProfessor" x="150" y="94"
+										  width="135" label="Adicionar Disciplina" click="addDisciplinaProfessor(event)"/>
+								<s:Button id="botaoRemoverDisicplinaProfessor" x="150" y="124"
+										  width="133" label="Remover Disciplina" click="removerDisciplinaProfessor(event)"/>
+							</s:BorderContainer>
+						</s:Form>
+					</s:Panel>
+				</s:NavigatorContent>
+				
+				<s:NavigatorContent width="100%" height="100%" label="Alunos">
+					<s:layout>
+						<s:BasicLayout/>
+					</s:layout>
+					<s:Panel x="74" y="6" width="890" height="394">
+						<s:Form x="4" y="-19" width="888" height="376">
+							<s:layout>
+								<s:BasicLayout/>
+							</s:layout>
+							<s:Label x="10" y="18" text="* Nome:"/>
+							<componente:MasterTextInput id="campoNomeAluno" restrict="a-zA-Z 0-9 \.\-\ç\Ç\ã\Ã\á\Á\ó\Ó\í\Í\é\É\ú\Ú\õ\Õ\ª\º" x="10" y="36" capsType="init" width="184"/>
+							<s:Label x="211" y="15" text="* Sobrenome:"/>
+							<componente:MasterTextInput id="campoSobreNomeAluno" capsType="init" x="211" restrict="a-zA-Z 0-9 \.\-\ç\Ç\ã\Ã\á\Á\ó\Ó\í\Í\é\É\ú\Ú\õ\Õ\ª\º" y="34" width="220"/>
+							<s:Label x="439" y="15" text="* Matrícula:"/>
+							<componente:MasterTextInput id="campoMatriculaAluno" capsType="init" x="439" restrict="a-zA-Z 0-9 \.\-" y="34" width="173"/>
+							<s:Label x="11" y="66" text="* CPF:"/>
+							<componente:MasterTextInput id="campoCPFAluno" x="9" inputMask="999.999.999-99" onlyRestrict="number" focusOut="campoCPFAluno_focusOutHandler(event)" blankMaskChar=" " y="85" width="185"/>
+							<s:Label x="216" y="66" text="* RG:"/>
+							<componente:MasterTextInput id="campoRGAluno" x="212" y="84" restrict="a-z 0-9 \.\-" width="211"/>
+							<s:Label x="439" y="64" height="14" text="* Telefone:"/>
+							<componente:MasterTextInput id="campoTelefoneAluno" inputMask="(99)9999-9999" blankMaskChar=" " focusOut="campoTelefoneAluno_focusOutHandler(event)" onlyRestrict="number" x="435" y="85" width="177"/>
+							<s:Label x="10" y="119" text="* Sexo:"/>
+							<s:ComboBox id="comboSexoAluno" x="10" y="139" width="244" selectedIndex="-1" prompt="Escolha um sexo... ">
+								<s:ArrayCollection>
+									<fx:String>MASCULINO</fx:String>
+									<fx:String>FEMININO</fx:String>
+								</s:ArrayCollection>	
+							</s:ComboBox>
+							<s:Label x="642" y="15" text="E-mail:"/>
+							<componente:MasterTextInput id="campoEmailAluno" x="638" y="34" width="221" restrict="a-zA-Z 0-9 \.\-\_\@" focusOut="campoEmailProfessor_focusOutHandler(event)"/>
+							<s:Label x="620" y="120" text="* Estado Civil:"/>
+							<s:ComboBox id="comboEstadoCivilAluno" x="620" y="139" width="244" selectedIndex="-1" prompt="Escolha um estado civil...">
+								<s:ArrayCollection>
+									<fx:String>SOLTEIRO(A)</fx:String>
+									<fx:String>CASADO(A)</fx:String>
+									<fx:String>DIVORCIADO(A)</fx:String>
+									<fx:String>VIÚVO(A)</fx:String>
+								</s:ArrayCollection>	
+							</s:ComboBox>
+							<s:Label x="638" y="65" text="* Data de Nascimento:"/>
+							<mx:DateField id="campoDataNascimentoAluno" x="637" y="86" width="226"
+										  dayNames="{['D','S','T','Q','Q','S','S']}" editable="true"
+										  focusOut="campoDataNascimentoAluno_focusOutHandler(event)"
+										  formatString="DD/MM/YYYY"
+										  monthNames="['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']"/>
+							<s:Label x="11" y="180" text="* Endereço:"/>
+							<s:BorderContainer id="painelEnderecoAluno" x="11" y="200"
+											   width="859" height="130">
+								<s:Label x="21" y="14" text="Rua:"/>
+								<componente:MasterTextInput id="campoRuaAluno" x="21" y="34"
+															width="367" editable="false"/>
+								<s:Label x="401" y="14" text="Bairro:"/>
+								<componente:MasterTextInput id="campoBairroAluno" x="401" y="34"
+															width="302" editable="false"/>
+								<s:Label x="722" y="14" text="Número:"/>
+								<componente:MasterTextInput id="campoNumeroAluno" x="722" y="34"
+															width="105" editable="false"/>
+								<s:Label x="21" y="71" text="Complemento:"/>
+								<componente:MasterTextInput id="campoComplementoAluno" x="21"
+															y="91" width="315" editable="false"/>
+								<s:Label x="351" y="72" text="CEP:"/>
+								<componente:MasterTextInput id="campoCEPAluno" x="351" y="91"
+															width="213" editable="false"/>
+								<s:Label x="665" y="71" text="Cidade:"/>
+								<componente:MasterTextInput id="campoCidadeAluno" x="665" y="91"
+															width="162" editable="false"/>
+								<s:Label x="572" y="71" text="Estado:"/>
+								<componente:MasterTextInput id="campoEstadoAluno" x="572" y="91"
+															width="84" editable="false"/>
+							</s:BorderContainer>
+							<s:Image x="788" y="166" width="30" height="32"
+									 source="@Embed('../../assets/images/pesquisar.png')" click="chamaTabelaEnderecos(event)" toolTip="Clique para procurar por um endereço existente"/>
+							<s:Image x="827" y="166" width="33" height="32" toolTip="Clique para adicionar um novo endereço" click="novoEndereco(event)"
+									 source="@Embed('../../assets/images/add.png')"/>
+							<s:Button id="botaoConcluirAluno" x="10" y="338" width="76"
+									  label="Concluir" click="ConcluirAluno()"/>
+							<s:Button id="botaoLimparAluno" x="94" y="338" width="76"
+									  label="Limpar" click="exibeAlert()"/>
+							<s:BorderContainer x="306" y="124" width="286" height="42" creationComplete="carregaCurso(event)" toolTip="Adicione os cursos para o qual este professor dá aula">
+								<s:Label x="8" y="19" text="* Curso:"/>
+								<s:ComboBox id="comboCursoProfessor0" x="60" y="10" width="157"
+											dataProvider="{alcomboCurso}" />
+								<s:Image x="242" y="14" width="19" height="17" toolTip="Clique para cadastrar um novo curso" click="novoCurso(event)"
+										 source="@Embed('../../assets/images/add.png')"/>
+								<s:Image x="260" y="14" width="19" height="17" toolTip="Clique para remover o curso selecionado" click="removerCurso(event)"
+										 source="@Embed('../../assets/images/remove.png')"/>
+								<s:Image x="229" y="11" width="13" height="24"
+										 source="@Embed('../../assets/images/pesquisar.png')" click="chamaTabelaCurso(event)" toolTip="Clique para adicionar uma instituição existente"/>
+							</s:BorderContainer>
+						</s:Form>
+					</s:Panel>
+				</s:NavigatorContent>
+				
+				<s:NavigatorContent width="100%" height="100%" label="Usuários">
+					<s:Panel x="387" y="12" width="269" height="377" addedToStage="listaPessoaFisica()">
+						<s:Form x="0" y="-18" width="267" height="361">
+							<s:layout>
+								<s:BasicLayout/>
+							</s:layout>
+							<s:Label x="14" y="0" fontSize="12" text="* Usuário:"/>
+							<componente:MasterTextInput id="campoUsuario" x="10" y="17" width="222" maxChars="20" restrict="a-z 0-9 \.\-\_" capsType="lowercase" focusOut="campoUsuario_focusOutHandler(event)"/>
+							<s:Label x="10" y="53" fontSize="12" text="* Senha:"/>
+							<componente:MasterTextInput id="campoSenhaUsuario" x="10" y="69" width="222" maxChars="20" restrict="a-z 0-9" focusOut="campoSenhaUsuario_focusOutHandler(event)" displayAsPassword="true"/>
+							<s:Label x="14" y="103" fontSize="12" text="* Digite novamente sua senha:"/>
+							<componente:MasterTextInput id="campoSenhaDenovo" x="11" y="123" width="222"  focusOut="campoSenhaDenovo_focusOutHandler(event)" restrict="a-z 0-9" displayAsPassword="true"/>
+							<s:Label x="12" y="153" fontSize="12" text="* Nome:"/>
+							<s:ComboBox id="campoNomeUsuario" x="10" y="169" dataProvider="{alnome}"
+														width="223" change="setaSobrenome(event)" />
+							<s:Button id="botaoConcluirUsuario" x="8" y="313" width="102"
+									  label="Concluir" click="ConcluirUsuarios()"/>
+							<s:Button id="botaoLimpaUsuario" x="133" y="313" width="102"
+									  label="Limpar" click="LimparCamposUsuarios()"/>
+							<s:Label x="11" y="254" fontSize="12" text="* CPF:"/>
+							<s:TextInput id="campoCPFUsuario" x="9" y="269"
+														width="223" 
+														editable="false"/>
+							<s:Label x="14" y="204" fontSize="12" text="Sobrenome"/>
+							<componente:MasterTextInput id="campoSobrenome" x="12" y="219"
+														width="223" editable="false"/>
+							
+							
+						</s:Form>	
+						</s:Panel>
+				</s:NavigatorContent>
+				
+				<s:NavigatorContent width="100%" height="100%" label="Disciplinas">
+					<s:Panel x="382" y="54" width="269" height="180">
+						<s:Form x="0" y="0" width="267" height="146">
+							<s:layout>
+								<s:BasicLayout/>
+							</s:layout>
+						<componente:MasterTextInput id="campoNomeDisciplina" x="10" y="17" restrict="a-zA-Z 0-9 \.\-\ç\Ç\ã\Ã\á\Á\ó\Ó\í\Í\é\É\ú\Ú\õ\Õ\ª\º" width="222" initialize="carregaCurso(event)"/>
+							<s:ComboBox id="comboNomeCurso" x="11" y="68" width="222" dataProvider="{alcursonome}"/>
+							<s:Label x="14" y="0" fontSize="12" text="* Nome da Disciplina:"/>
+						<s:Label x="15" y="51" fontSize="12" text="* Curso"/>
+						
+						<s:Button id="botaoLimparDisciplina" x="137" y="102" width="102" label="Limpar"
+								  click="exibeAlert()"/>
+							<s:Button id="botaoConcluirDisciplina" x="12" y="102" width="102" label="Concluir"
+									  click="ConcluirDisciplinas()"/>
+						</s:Form>
+					</s:Panel>
+				</s:NavigatorContent>
+				<s:NavigatorContent width="100%" height="100%" label="Curso">
+					<s:Panel x="382" y="54" width="269" height="148">
+						<s:Form x="0" y="0" width="267" height="112">
+							<s:layout>
+								<s:BasicLayout/>
+							</s:layout>
+						<componente:MasterTextInput id="campoNomeCurso" x="10" y="27"  restrict="a-zA-Z 0-9 \.\-\ç\Ç\ã\Ã\á\Á\ó\Ó\í\Í\é\É\ú\Ú\õ\Õ\ª\º" width="222"/>
+						<s:Label x="14" y="10" fontSize="12" text="* Nome do Curso:"/>
+						
+						<s:Button id="botaoLimparCurso" x="128" y="60" width="102" label="Limpar"
+								  click="exibeAlert()"/>
+							<s:Button id="botaoConcluirCurso" x="3" y="60" width="102" label="Concluir"
+									   click="ConcluirCursos(event)"/>
+						</s:Form>
+					</s:Panel>
+				</s:NavigatorContent>
+				<s:NavigatorContent width="100%" height="100%" label="Turmas">
+					<s:Panel x="44" y="11" width="953" height="335"
+							 creationComplete="carregaMontagemTurmas(event)"
+							 toolTip="Insira um ano, um curso, um professor e uma disciplina pra criar uma turma ou alterar seus alunos">
+						<s:ComboBox id="comboCursoTurmas" x="253" y="10" width="220" dataProvider="{alcursonome}" change="carregaProfessor(event)"/>
+						<s:ComboBox id="comboProfessorTurmas" x="481" y="10" width="220"
+									change="carregaDisciplinaPorProfessor(event)"
+									dataProvider="{alprofessornome}" enabled="false"/>
+						<s:ComboBox id="comboDisciplinaTurmas" x="709" y="10" width="220"
+									enabled="false" dataProvider="{aldisciplinanome}" change="carregaTabelaAlunos(event)"/>
+						<s:Label x="709" y="-12" text="Disciplina:"/>
+						<s:Label x="481" y="-12" text="Professor:"/>
+						<s:Label x="253" y="-12" text="Curso:"/>
+						<s:Label x="37" y="-12" text="Ano:"/>
+						<s:Label x="37" y="71" text="Alunos:"/>
+						<s:TextInput id="campoAnoTurmas" x="37" y="12" width="208"/>
+						<s:DataGrid id="tabelaAlunosTurma" x="35" y="90" width="893"
+									height="132" requestedRowCount="4" dataProvider="{alalunoturma}">
+							<s:columns>
+								<s:ArrayList>
+									<s:GridColumn dataField="matricula" headerText="Matricula"
+												  sortable="false"></s:GridColumn>
+									<s:GridColumn dataField="nome" headerText="Nome" sortable="false"></s:GridColumn>
+									<s:GridColumn dataField="sobrenome" headerText="Sobrenome"
+												  resizable="true" sortable="false"></s:GridColumn>
+								</s:ArrayList>
+							</s:columns>
+						</s:DataGrid>
+						<s:Button id="botaoAdicionarDisicplinaAluno0" x="795" y="60"
+								  width="133" label="Adicionar Aluno" click="abreTelaTabelaAluno(event)"/>
+						<s:Button id="botaoAdicionarDisicplinaAluno1" x="654" y="60"
+								  width="133" label="Remover Aluno" click="removeAluno(event)"/>
+						<s:Button id="botaoRemoverDisicplinaAluno1" x="795" y="246"
+								  width="133" label="Concluir" click="ConcluirTurma(event)"/>
+						<s:Button id="botaoRemoverDisicplinaAluno0" x="650" y="246"
+								  width="133" label="Limpar" click="LimparTurma()"/>
+					</s:Panel>
+				</s:NavigatorContent>
+				
+				<s:NavigatorContent width="100%" height="100%" label="Endereços">
+					<s:Panel x="10" y="10" width="890" height="194">
+						<s:Label x="21" y="14" text="* Rua:"/>
+						<componente:MasterTextInput id="campoRua" x="21" y="34"
+													width="367" dropShadowVisible="false"
+													enabled="true" restrict="a-zA-Z 0-9 \.\-\ç\Ç\ã\Ã\á\Á\ó\Ó\í\Í\é\É\ú\Ú\õ\Õ\ª\º" />
+						<s:Label x="401" y="14" text="* Bairro:"/>
+						<componente:MasterTextInput id="campoBairro" x="401"
+													y="34" width="302" enabled="true"  restrict="a-zA-Z 0-9 \.\-\ç\Ç\ã\Ã\á\Á\ó\Ó\í\Í\é\É\ú\Ú\õ\Õ\ª\º"/>
+						<s:Label x="711" y="10" text="Número:"/>
+						<componente:MasterTextInput id="campoNumero" x="711"
+													y="34" width="108" enabled="true" restrict="a-zA-Z 0-9 \-" />
+						<s:Label x="21" y="71" text="Complemento:"/>
+						<componente:MasterTextInput id="campoComplemento" x="21"
+													y="91" width="315" enabled="true" restrict="a-zA-Z 0-9 \.\-\ç\Ç\ã\Ã\á\Á\ó\Ó\í\Í\é\É\ú\Ú\õ\Õ\ª\º"/> 
+						<s:Label x="340" y="71" text="* CEP:"/>
+						<componente:MasterTextInput id="campoCEP" x="340" y="91"
+													width="213" blankMaskChar=" "
+													enabled="true"
+													focusOut="campoCEP_focusOutHandler(event)"
+													inputMask="99999-999"/>
+						<s:Label x="558" y="71" text="* Estado:"/>
+						<s:ComboBox id="comboEstado" x="558" y="91" width="84"
+									change="comboEstado_changeHandler(event)"
+									dataProvider="{alestado}" enabled="true"
+									selectedIndex="1"/>
+						<s:Label x="660" y="70" text="* Cidade:"/>
+						<s:ComboBox id="comboCidade" x="660" y="90" width="159"
+									dataProvider="{alcidade}" enabled="true"
+									selectedIndex="1"/>
+						<s:Button id="botaoConcluirEnderecos" x="21" y="122" width="76" label="Concluir"
+								  click="ConcluirEnderecos()"/>
+						<s:Button id="botaoLimparEnderecos" x="105" y="122" width="76" label="Limpar"
+								  click="exibeAlert()"/>
+					</s:Panel>
+				</s:NavigatorContent>
+			</mx:TabNavigator>
+		</s:NavigatorContent>
+		<s:NavigatorContent x="13" y="46" width="100%" height="100%" label="Consultas">
+			<mx:TabNavigator x="14" y="19" width="1027" height="504" id="tabNavigatorConsulta">
+				<s:NavigatorContent width="100%" height="100%" label="Endereços">
+					<mx:DataGrid id="tabelaConsultaEndereco" x="43" y="65" width="935" height="360"
+								 color="#4C2600" dataProvider="{alendereco}"
+								 itemEditBeginning="verificaLinhaEditavel(event)"
+								 variableRowHeight="true">
+						<mx:columns>
+							<mx:DataGridColumn dataField="codigo" editable="false"
+											   headerText="Codigo" sortable="false"/>
+								<mx:DataGridColumn dataField="rua" headerText="Rua" sortable="false">
+									<mx:itemEditor>
+										<fx:Component>
+											<componente:MasterTextInput restrict="a-z 0-9 \.\-\ª\º" />
+										</fx:Component>
+									</mx:itemEditor>
+								</mx:DataGridColumn>
+								<mx:DataGridColumn dataField="bairro" headerText="Bairro"
+												   sortable="false">
+									<mx:itemEditor>
+										<fx:Component>
+											<componente:MasterTextInput restrict="a-z 0-9 \.\-\ª\º" />
+										</fx:Component>
+									</mx:itemEditor>
+								</mx:DataGridColumn>
+								<mx:DataGridColumn dataField="numero" headerText="Numero"
+												   sortable="false">
+									<mx:itemEditor>
+										<fx:Component>
+											<componente:MasterTextInput restrict="a-z 0-9 \-" />
+										</fx:Component>
+									</mx:itemEditor>
+								</mx:DataGridColumn>
+								<mx:DataGridColumn dataField="complemento" headerText="Complemento"
+												   sortable="false">
+									<mx:itemEditor>
+										<fx:Component>
+											<componente:MasterTextInput restrict="a-z 0-9 \.\-\ª\º" />
+										</fx:Component>
+									</mx:itemEditor>
+								</mx:DataGridColumn>
+								<mx:DataGridColumn dataField="cep" headerText="CEP" sortable="false">
+									<mx:itemEditor>
+										<fx:Component>
+											<componente:MasterTextInput  blankMaskChar=" "  focusOut="outerDocument.campoCEP_focusOutHandler(event)" inputMask="99999-999" />
+										</fx:Component>
+									</mx:itemEditor>
+								</mx:DataGridColumn>
+								<mx:DataGridColumn dataField="cidade.estado.uf" headerText="Estado"
+												   sortable="false">
+									<mx:itemEditor>
+										<fx:Component>
+											<mx:ComboBox dataProvider="{outerDocument.alestado}" selectedItem="{outerDocument.itemSelecionado}" click="outerDocument.clickHandler(event)" change="outerDocument.listaCidadesTabela(event)" />
+										</fx:Component>
+									</mx:itemEditor>
+								</mx:DataGridColumn>
+								<mx:DataGridColumn id="colunacidade" dataField="cidade.nome"
+												   editable="false" headerText="Cidade"
+												   sortable="false">
+									<mx:itemEditor>
+										<fx:Component>
+											<mx:ComboBox dataProvider="{outerDocument.alcidade}" selectedItem="{outerDocument.itemSelecionado}" click="outerDocument.clickHandler2(event)" change="outerDocument.verificaMudouCidade(event)"/>
+										</fx:Component>
+									</mx:itemEditor>
+								</mx:DataGridColumn>
+							<mx:DataGridColumn dataField="operacoes" editable="false"
+											   headerText="Operações"
+											   itemRenderer="br.com.carpediem.controle.renderers.OperationsRenderer"
+											   sortable="false"/>
+						</mx:columns>
+					</mx:DataGrid>
+					<componente:MasterTextInput id="campoConsultaEndereco" x="10" y="29" width="1005" restrict="a-z 0-9 \.\-\_\@\ª\º"
+												change="buscar(event)"/>
+					<s:Label x="10" y="10" color="#4C2600" text="Pesquise:"/>
+				</s:NavigatorContent>
+				
+				<s:NavigatorContent id="tav1" width="100%" height="100%" label="Administradores" >
+					<mx:DataGrid id="tabelaConsultaAdministradores" x="20" y="65" width="995"
+								 height="360" color="#4C2600" dataProvider="{aladministrador}"
+								 fontFamily="Arial"
+								 itemEditBeginning="verificaLinhaEditavel(event)"
+								 variableRowHeight="true" click="tabelaConsulta_clickHandler(event)">
+						<mx:columns>
+							<mx:DataGridColumn dataField="codigoAdministrador" headerText="Codigo"
+											   sortable="false" editable="false"/>
+							<mx:DataGridColumn dataField="nome" headerText="Nome" sortable="false">
+								<mx:itemEditor>
+									<fx:Component>
+										<componente:MasterTextInput capsType="init" restrict="a-z 0-9 \.\-\ª\º" />
+									</fx:Component>
+								</mx:itemEditor>
+							</mx:DataGridColumn>
+							<mx:DataGridColumn dataField="sobrenome" headerText="Sobrenome"
+											   sortable="false">
+								<mx:itemEditor>
+									<fx:Component>
+										<componente:MasterTextInput  capsType="init" restrict="a-z 0-9 \.\-\ª\º" />
+									</fx:Component>
+								</mx:itemEditor>
+							</mx:DataGridColumn>
+							<mx:DataGridColumn dataField="cpf" headerText="CPF" sortable="false">
+								<mx:itemEditor>
+									<fx:Component>
+										<componente:MasterTextInput focusOut="outerDocument.campoCPFAdministrador_focusOutHandler(event)" onlyRestrict="number" blankMaskChar=" " inputMask="999.999.999-99"/>
+									</fx:Component>
+								</mx:itemEditor>
+							</mx:DataGridColumn>
+							<mx:DataGridColumn dataField="rg" headerText="RG" sortable="false">
+								<mx:itemEditor>
+									<fx:Component>
+										<componente:MasterTextInput restrict="a-z A-Z 0-9 \-\." />
+									</fx:Component>
+								</mx:itemEditor>
+							</mx:DataGridColumn>
+							<mx:DataGridColumn dataField="estadoCivil" headerText="Estado Civil"
+											   sortable="false">
+								<mx:itemEditor>
+									<fx:Component>
+										<mx:ComboBox selectedItem="{outerDocument.itemSelecionado}" click="outerDocument.clickHandler(event)">
+											<s:ArrayCollection>
+												<fx:String>SOLTEIRO(A)</fx:String>
+												<fx:String>CASADO(A)</fx:String>
+												<fx:String>DIVORCIADO(A)</fx:String>
+												<fx:String>VIÚVO(A)</fx:String>
+											</s:ArrayCollection>
+										</mx:ComboBox>
+									</fx:Component>
+								</mx:itemEditor>
+							</mx:DataGridColumn>
+							<mx:DataGridColumn dataField="sexo" headerText="Sexo" sortable="false">
+								<mx:itemEditor>
+									<fx:Component>
+										<mx:ComboBox selectedItem="{outerDocument.itemSelecionado}" click="outerDocument.clickHandler(event)">
+											<s:ArrayCollection>
+												<fx:String>MASCULINO</fx:String>
+												<fx:String>FEMININO</fx:String>
+											</s:ArrayCollection>
+										</mx:ComboBox>
+									</fx:Component>
+								</mx:itemEditor>
+							</mx:DataGridColumn>
+							<mx:DataGridColumn dataField="dataNascimento" headerText="Nascimento"
+											   sortable="false">
+								<mx:itemRenderer>
+									<fx:Component>
+										<mx:Label text="{outerDocument.dateFormat.format(data.dataNascimento)}"/>
+									</fx:Component>
+								</mx:itemRenderer>
+								<mx:itemEditor>
+									<fx:Component>
+										<mx:DateField editable="true" focusOut="outerDocument.campoDataNascimentoAdministrador_focusOutHandler(event)" formatString="DD/MM/YYYY" toolTip="Digite uma data no formato DD/MM/YYYY" dayNames="{['D','S','T','Q','Q','S','S']}"  monthNames="['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']"/>
+									</fx:Component>
+								</mx:itemEditor>
+							</mx:DataGridColumn>
+							<mx:DataGridColumn dataField="telefone" headerText="Telefone" sortable="false">
+								<mx:itemEditor>
+									<fx:Component>
+										<componente:MasterTextInput focusOut="outerDocument.campoTelefoneAdministrador_focusOutHandler(event)" inputMask="(99)9999-9999"  blankMaskChar=" " validationLanguage="portuguese"/>
+									</fx:Component>
+								</mx:itemEditor>
+							</mx:DataGridColumn>
+							<mx:DataGridColumn dataField="email" headerText="Email" sortable="false">
+								<mx:itemEditor>
+									<fx:Component>
+										<componente:MasterTextInput focusOut="outerDocument.campoEmailAdministrador_focusOutHandler(event)" />
+									</fx:Component>
+								</mx:itemEditor>	
+							</mx:DataGridColumn>
+							<mx:DataGridColumn width="75" dataField="endereco" editable="false"
+											   headerText="Endereço"
+											   itemRenderer="br.com.carpediem.controle.renderers.EnderecoButtonsRenderer"
+											   resizable="false" sortable="false"/>
+							<mx:DataGridColumn dataField="operacoes" headerText="Operações"
+											   itemRenderer="br.com.carpediem.controle.renderers.OperationsRenderer"
+											   sortable="false" editable="false"/>
+						</mx:columns>
+					</mx:DataGrid>
+					<componente:MasterTextInput id="campoConsultaAdministradores" x="20" y="29" width="995" restrict="a-z 0-9 \.\-\_\@\ª\º"
+												change="buscar(event)"/>
+					<s:Label x="20" y="10" color="#4C2600" text="Pesquise:"/>
+				</s:NavigatorContent>
+				
+				<s:NavigatorContent width="100%" height="100%" label="Professores">
+					<componente:MasterTextInput id="campoConsultaProfessor" x="20" y="29" width="995" restrict="a-z 0-9 \.\-\_\@\ª\º\/"
+												change="buscar(event)"/>
+					<s:Label x="20" y="10" color="#4C2600" text="Pesquise:"/>
+					<mx:DataGrid id="tabelaConsultaProfessor" x="21" y="59" width="994"
+								 height="360" color="#4C2600" dataProvider="{alprofessor}"
+								 fontFamily="Arial"
+								 itemEditBeginning="verificaLinhaEditavel(event)"
+								 variableRowHeight="true" click="tabelaConsulta_clickHandler(event)">
+						<mx:columns>
+							<mx:DataGridColumn dataField="codigoProfessor" headerText="Codigo"
+											   sortable="false" editable="false"/>
+							<mx:DataGridColumn dataField="nome" headerText="Nome">
+								<mx:itemEditor>
+									<fx:Component>
+										<componente:MasterTextInput restrict="a-z 0-9 \.\-\ª\º" capsType="init" />
+									</fx:Component>
+								</mx:itemEditor>	
+							</mx:DataGridColumn>
+							<mx:DataGridColumn dataField="sobrenome" headerText="Sobrenome">
+								<mx:itemEditor>
+									<fx:Component>
+										<componente:MasterTextInput restrict="a-z 0-9 \.\-\ª\º" capsType="init" />
+									</fx:Component>
+								</mx:itemEditor>
+							</mx:DataGridColumn>
+							<mx:DataGridColumn dataField="cpf" headerText="CPF" sortable="false">
+								<mx:itemEditor>
+									<fx:Component>
+										<componente:MasterTextInput inputMask="999.999.999-99" onlyRestrict="number" focusOut="outerDocument.campoCPFProfessor_focusOutHandler(event)" blankMaskChar=" "/>
+									</fx:Component>
+								</mx:itemEditor>
+							</mx:DataGridColumn>
+							<mx:DataGridColumn dataField="rg" headerText="RG" sortable="false">
+								<mx:itemEditor>
+									<fx:Component>
+										<componente:MasterTextInput restrict="a-z A-Z 0-9 \.\-"/>
+									</fx:Component>
+								</mx:itemEditor>
+							</mx:DataGridColumn>
+							<mx:DataGridColumn dataField="estadoCivil" headerText="Estado Civil"
+											   sortable="false">
+								<mx:itemEditor>
+									<fx:Component>
+										<mx:ComboBox selectedItem="{outerDocument.itemSelecionado}" click="outerDocument.clickHandler(event)">
+											<s:ArrayCollection>
+												<fx:String>SOLTEIRO(A)</fx:String>
+												<fx:String>CASADO(A)</fx:String>
+												<fx:String>DIVORCIADO(A)</fx:String>
+												<fx:String>VIÚVO(A)</fx:String>
+											</s:ArrayCollection>
+										</mx:ComboBox>
+									</fx:Component>
+								</mx:itemEditor>
+							</mx:DataGridColumn>
+							<mx:DataGridColumn dataField="sexo" headerText="Sexo">
+								<mx:itemEditor>
+									<fx:Component>
+										<mx:ComboBox selectedItem="{outerDocument.itemSelecionado}" click="outerDocument.clickHandler(event)">
+											<s:ArrayCollection>
+												<fx:String>MASCULINO</fx:String>
+												<fx:String>FEMININO</fx:String>
+											</s:ArrayCollection>
+										</mx:ComboBox>
+									</fx:Component>
+								</mx:itemEditor>
+							</mx:DataGridColumn>
+							<mx:DataGridColumn dataField="dataNascimento" headerText="Nascimento"
+											   sortable="false">
+								<mx:itemRenderer>
+									<fx:Component>
+										<mx:Label text="{outerDocument.dateFormat.format(data.dataNascimento)}"/>
+									</fx:Component>
+								</mx:itemRenderer>
+								<mx:itemEditor>
+									<fx:Component>
+										<mx:DateField editable="true" focusOut="outerDocument.campoDataNascimentoProfessor_focusOutHandler(event)" formatString="DD/MM/YYYY" toolTip="Digite uma data no formato DD/MM/YYYY" dayNames="{['D','S','T','Q','Q','S','S']}"  monthNames="['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']"/>
+									</fx:Component>
+								</mx:itemEditor>
+							</mx:DataGridColumn>
+							<mx:DataGridColumn dataField="telefone" headerText="Telefone" sortable="false">
+								<mx:itemEditor>
+									<fx:Component>
+										<componente:MasterTextInput inputMask="(99)9999-9999" blankMaskChar=" " focusOut="outerDocument.campoTelefoneProfessor_focusOutHandler(event)" onlyRestrict="number"/>
+									</fx:Component>
+								</mx:itemEditor>
+							</mx:DataGridColumn>
+							<mx:DataGridColumn dataField="email" headerText="Email" sortable="false">
+								<mx:itemEditor>
+									<fx:Component>
+										<componente:MasterTextInput x="287" y="140" restrict="a-z 0-9 \.\-\@"  focusOut="outerDocument.campoEmailProfessor_focusOutHandler(event)"/>
+									</fx:Component>
+								</mx:itemEditor>
+							</mx:DataGridColumn>
+							<mx:DataGridColumn dataField="disciplinas" editable="false" headerText="Disciplinas" sortable="false" itemRenderer="br.com.carpediem.controle.renderers.DisciplinaButtonsRenderer" />
+							<mx:DataGridColumn dataField="endereco" editable="false" headerText="Endereço" itemRenderer="br.com.carpediem.controle.renderers.EnderecoButtonsRenderer"/>
+							<mx:DataGridColumn dataField="operacoes" headerText="Operações" itemRenderer="br.com.carpediem.controle.renderers.OperationsRenderer" sortable="false" editable="false"/>
+						</mx:columns>
+					</mx:DataGrid>
+					
+				</s:NavigatorContent>
+				
+				<s:NavigatorContent width="100%" height="100%" label="Alunos">
+					<s:layout>
+						<s:BasicLayout/>
+					</s:layout>
+					<componente:MasterTextInput id="campoConsultaAluno" x="20" y="29" width="995" restrict="a-z 0-9 \.\-\_\@\ª\º"
+												change="buscar(event)"/>
+					<s:Label x="20" y="10" color="#4C2600" text="Pesquise:"/>
+					<mx:DataGrid id="tabelaConsultaAluno" x="20" y="59" width="995"
+								 height="360" color="#4C2600" dataProvider="{alaluno}"
+								 fontFamily="Arial"
+								 itemEditBeginning="verificaLinhaEditavel(event)"
+								 variableRowHeight="true" click="tabelaConsulta_clickHandler(event)">
+						<mx:columns>
+							<mx:DataGridColumn dataField="codigoAluno" headerText="Codigo"
+											   sortable="false" editable="false"/>
+							<mx:DataGridColumn dataField="matricula" headerText="Matrícula"
+											   sortable="false"/>
+							<mx:DataGridColumn dataField="nome" headerText="Nome" sortable="false"/>
+							<mx:DataGridColumn dataField="sobrenome" headerText="Sobrenome"
+											   sortable="false"/>
+							<mx:DataGridColumn dataField="cpf" headerText="CPF" sortable="false"/>
+							<mx:DataGridColumn dataField="rg" headerText="RG" sortable="false"/>
+							<mx:DataGridColumn dataField="estadoCivil" headerText="Estado Civil"
+											   sortable="false">
+								<mx:itemEditor>
+									<fx:Component>
+										<mx:ComboBox selectedItem="{outerDocument.itemSelecionado}" click="outerDocument.clickHandler(event)">
+											<s:ArrayCollection>
+												<fx:String>SOLTEIRO(A)</fx:String>
+												<fx:String>CASADO(A)</fx:String>
+												<fx:String>DIVORCIADO(A)</fx:String>
+												<fx:String>VIÚVO(A)</fx:String>
+											</s:ArrayCollection>
+										</mx:ComboBox>
+									</fx:Component>
+								</mx:itemEditor>
+							</mx:DataGridColumn>
+							<mx:DataGridColumn dataField="sexo" headerText="Sexo" sortable="false">
+								<mx:itemEditor>
+									<fx:Component>
+										<mx:ComboBox selectedItem="{outerDocument.itemSelecionado}" click="outerDocument.clickHandler(event)">
+											<s:ArrayCollection>
+												<fx:String>MASCULINO</fx:String>
+												<fx:String>FEMININO</fx:String>
+											</s:ArrayCollection>
+										</mx:ComboBox>
+									</fx:Component>
+								</mx:itemEditor>
+							</mx:DataGridColumn>
+							<mx:DataGridColumn dataField="telefone" headerText="Telefone"
+											   sortable="false"/>
+							<mx:DataGridColumn dataField="email" headerText="Email" sortable="false"/>
+							<mx:DataGridColumn width="75" dataField="endereco" editable="false"
+											   headerText="Endereço"
+											   itemRenderer="br.com.carpediem.controle.renderers.EnderecoButtonsRenderer"
+											   resizable="false" sortable="false"/>
+							<mx:DataGridColumn dataField="operacoes" headerText="Operações"
+											   itemRenderer="br.com.carpediem.controle.renderers.OperationsRenderer"
+											   sortable="false" editable="false"/>
+						</mx:columns>
+					</mx:DataGrid>
+				</s:NavigatorContent>
+				
+				<s:NavigatorContent width="100%" height="100%" label="Usuários">
+					<componente:MasterTextInput id="campoConsultaUsuario" x="10" y="29" width="1005" restrict="a-z 0-9 \.\-\_\@\ª\º"
+												change="buscar(event)"/>
+					<s:Label x="12" y="10" color="#4C2600" text="Pesquise:"/>
+					<mx:DataGrid id="tabelaConsultaUsuario" x="136" y="78" width="753" height="360"
+								 color="#4C2600" dataProvider="{alusuario}"
+								 itemEditBeginning="verificaLinhaEditavel(event)"
+								 variableRowHeight="true">
+						<mx:columns>
+							<mx:DataGridColumn dataField="codigoUsuario" editable="false"
+											   headerText="Codigo" sortable="false"/>
+								<mx:DataGridColumn dataField="usuario" headerText="Usuário"
+												   resizable="true" sortable="false">
+									<mx:itemEditor>
+										<fx:Component>
+											<componente:MasterTextInput restrict="a-z 0-9 \.\-\ª\º" />
+										</fx:Component>
+									</mx:itemEditor>
+								</mx:DataGridColumn>
+								<mx:DataGridColumn width="150" dataField="senha" editable="false"
+												   headerText="Senha"
+												   itemRenderer="br.com.carpediem.controle.renderers.PasswordRenderer"
+												   resizable="false" sortable="false"/>
+								<mx:DataGridColumn width="150" dataField="pessoaFisica"
+												   editable="false" headerText="Pessoa"
+												   itemRenderer="br.com.carpediem.controle.renderers.PessoaFisicaRenderer"
+												   resizable="false" sortable="false">
+								</mx:DataGridColumn>
+							<mx:DataGridColumn editable="false" dataField="operacoes" headerText="Operações" itemRenderer="br.com.carpediem.controle.renderers.OperationsRenderer"/>
+						</mx:columns>
+					</mx:DataGrid>
+				</s:NavigatorContent>
+				
+				<s:NavigatorContent width="100%" height="100%" label="Disciplinas">
+					<mx:DataGrid id="tabelaConsultaDisciplina" x="190" y="71" width="579" height="360"
+								 color="#4C2600" dataProvider="{aldisciplinaConsulta}"
+								 itemEditBeginning="verificaLinhaEditavel(event)"
+								 variableRowHeight="true">
+						<mx:columns>
+							<mx:DataGridColumn dataField="codigoDisciplina" editable="false"
+											   headerText="Codigo" sortable="false"/>
+							<mx:DataGridColumn dataField="nome" headerText="Nome"
+											   resizable="true" sortable="false"/>
+								<mx:DataGridColumn dataField="operacoes" editable="false"
+												   headerText="Operações"
+												   itemRenderer="br.com.carpediem.controle.renderers.OperationsRenderer"
+												   sortable="false"/>
+						</mx:columns>
+					</mx:DataGrid>
+					<componente:MasterTextInput id="campoConsultaDisciplina" x="20" y="29" width="994" restrict="a-z 0-9 \.\-\_\@\ª\º"
+												change="buscar(event)"/>
+					<s:Label x="20" y="10" color="#4C2600" text="Pesquise:"/>
+				</s:NavigatorContent>
+				<s:NavigatorContent includeIn="ViewAdministrador" width="100%" height="100%"
+									label="Cursos">
+					<mx:DataGrid id="tabelaConsultaCurso" x="190" y="71" width="579" height="360"
+								 color="#4C2600" dataProvider="{alcurso}"
+								 itemEditBeginning="verificaLinhaEditavel(event)"
+								 variableRowHeight="true">
+						<mx:columns>
+							<mx:DataGridColumn dataField="codigoCurso" editable="false"
+											   headerText="Codigo" sortable="false"/>
+							<mx:DataGridColumn dataField="nome" headerText="Nome"
+											   resizable="true" sortable="false"/>
+								<mx:DataGridColumn dataField="operacoes" editable="false"
+												   headerText="Operações"
+												   itemRenderer="br.com.carpediem.controle.renderers.OperationsRenderer"
+												   sortable="false"/>
+						</mx:columns>
+					</mx:DataGrid>
+					<componente:MasterTextInput id="campoConsultaCurso" x="20" y="29" width="994" restrict="A-z a-z 0-9 \.\-\_\@\ª\º"
+												change="buscar(event)"/>
+					<s:Label x="20" y="10" color="#4C2600" text="Pesquise:"/>
+				</s:NavigatorContent>
+				
+			</mx:TabNavigator>
+		</s:NavigatorContent>
+	<s:Form width="886" height="452">
+		<s:layout>
+			<s:BasicLayout/>
+		</s:layout>
+		<s:Label x="10" y="18" text="Nome:"/>
+		<s:Label x="316" y="17" text="Sobrenome:"/>
+		<s:Label x="388" y="64" height="14" text="Telefone:"/>
+		<s:Label x="11" y="66" text="CPF:"/>
+		<s:Label x="216" y="66" text="RG:"/>
+		<s:Label x="10" y="119" text="Sexo:"/>
+		<s:Label x="10" y="170" text="Estado Civil:"/>
+		<s:Label x="287" y="174" text="Data de Nascimento:"/>
+		<s:Label x="287" y="121" text="E-mail:"/>
+		<s:Label x="583" y="10" height="17" text="Disciplinas Ministradas:"/>
+		<s:Label x="10" y="256" text="Endereço:"/>
+		<s:Image x="829" y="242" width="30" height="32"
+				 source="@Embed('../../assets/images/pesquisar.png')" click="chamaTabelaEnderecos(event)" toolTip="Clique para procurar por um endereço existente"/>
+		<s:Image x="788" y="242" width="33" height="32" toolTip="Clique para adicionar um novo endereço" click="novoEndereco(event)"
+				 source="@Embed('../../assets/images/add.png')"/>
+	</s:Form>
+</mx:Accordion>

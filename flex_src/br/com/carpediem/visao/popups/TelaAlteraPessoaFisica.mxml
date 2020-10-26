@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx" width="400" height="282" creationComplete="init(event)" close="PopUpManager.removePopUp(this)">
+	<fx:Script>
+		<![CDATA[
+			import br.com.carpediem.controle.DataBind;
+			import br.com.carpediem.controle.events.OKEvent;
+			import br.com.carpediem.modelo.Pessoa;
+			import br.com.carpediem.modelo.PessoaFisica;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+
+			[Bindable]
+			public var pessoaFisica:PessoaFisica = new PessoaFisica();
+			
+			protected function init(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				remoteObject.getPessoaFisicaUsuario(DataBind.instance().usuarioLinhaSelecionada.codigoUsuario);
+			}
+			
+			protected function result(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				pessoaFisica = event.result as PessoaFisica;
+				campoCodigo.text = (pessoaFisica.codigoPessoaFisica).toString();
+				campoNome.text = pessoaFisica.nome;
+				campoSobrenome.text = pessoaFisica.sobrenome;
+				campoCPF.text = pessoaFisica.cpf;
+			}
+			
+			protected function falha(event:FaultEvent):void
+			{
+				// TODO Auto-generated method stub
+				Alert.show("- Falha no BlazeDS\n" + event.fault.faultString);
+			}
+			
+			public function AlterarPessoaFisica ():void
+			{
+				var painel:TelaTabelaPessoaFisica = TelaTabelaPessoaFisica(PopUpManager.createPopUp(this, TelaTabelaPessoaFisica, true));
+				painel.addEventListener(OKEvent.OK, onPopUpClose, false, 0, true);
+				PopUpManager.centerPopUp(painel);
+			}
+			
+			private function onPopUpClose(evento:OKEvent):void
+			{
+				campoCodigo.text = (DataBind.instance().pessoaFisicaPopUp.codigoPessoaFisica).toString();
+				campoNome.text = DataBind.instance().pessoaFisicaPopUp.nome;
+				campoSobrenome.text = DataBind.instance().pessoaFisicaPopUp.sobrenome;
+				campoCPF.text = DataBind.instance().pessoaFisicaPopUp.cpf;
+			}
+			
+			protected function Concluir():void
+			{
+				pessoaFisica.codigoPessoaFisica = parseInt(campoCodigo.text);
+				DataBind.instance().pessoaFisicaSelecionadaUsuario = pessoaFisica;
+				
+				PopUpManager.removePopUp(this);
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<s:RemoteObject id="remoteObject" destination="FlexRemoto" fault="falha(event)">
+			<s:method name="getPessoaFisicaUsuario" result="result(event)" fault="falha(event)"/>
+		</s:RemoteObject>
+	</fx:Declarations>
+	<s:TextInput id="campoNome" x="24" y="73" width="356" editable="false" enabled="true"/>
+	<s:TextInput id="campoSobrenome" x="23" y="121" width="356" editable="false" enabled="true"/>
+	<s:Label x="23" y="102" fontWeight="bold" text="Sobrenome:"/>
+	<s:Label x="24" y="54" fontWeight="bold" text="Nome:"/>
+	<s:Label x="26" y="5" fontWeight="bold" text="Código:"/>
+	<s:TextInput id="campoCPF" x="25" y="173" width="356" editable="false" enabled="true"/>
+	<s:Label x="25" y="154" fontWeight="bold" text="CPF:"/>
+	<s:Button x="315" y="217" label="Concluir" enabled="{DataBind.instance().tabelaUsuarioEditavel}" click="Concluir()"/>
+	<s:Button x="25" y="217" label="Alterar Pessoa" click="AlterarPessoaFisica()" enabled="{DataBind.instance().tabelaUsuarioEditavel}"/>
+	<s:TextInput id="campoCodigo" x="24" y="25"/>
+</s:TitleWindow>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+				xmlns:s="library://ns.adobe.com/flex/spark"
+				xmlns:mx="library://ns.adobe.com/flex/mx"
+				width="255" height="77" autoDrawBackground="true">
+	<fx:Script>
+		<![CDATA[
+			import br.com.carpediem.controle.DataBind;
+			import br.com.carpediem.controle.Navegacao;
+			import br.com.carpediem.modelo.Sala;
+			import br.com.carpediem.visao.componentes.SalaVirtual;
+			
+			import mx.controls.Alert;
+			import mx.core.FlexGlobals;
+
+			[Bindable]
+			public static var indexSala:int = -1;
+			[Bindable]
+			public var salaVirtual:SalaVirtual;
+			[Bindable]
+			public var sala:Sala;
+			
+			private function init():void
+			{
+				var sala:Sala = DataBind.instance().listaDeSalas.getItemAt(indexSala) as Sala;
+			}
+	
+			private function AcessaSalaProfessor():void
+			{
+				salaVirtual.sala = sala;
+				Navegacao.instance().AcessaSalaVirtual();
+				parentApplication.addChild(salaVirtual);
+					
+			}
+			
+		]]>
+	</fx:Script>
+	<s:states>
+		<s:State name="normal"/>
+		<s:State name="hovered"/>
+	</s:states>
+	
+	<s:BorderContainer width="255" height="77" backgroundColor="#FDFBFB" borderColor="#18A5BA"
+					   borderWeight="2" click="AcessaSalaProfessor()" cornerRadius="8"
+					   dropShadowVisible="true" rollOverColor="#3E88F7"
+					   backgroundColor.hovered="#DED1D1">
+		<mx:Canvas x="-2" y="0" width="256" height="75">
+			<s:Label id="labelNome" x="10" y="12" height="13" fontWeight="bold"
+					 text="Sala: {DataBind.instance().listaDeSalas}"/>
+			<s:Label id="labelDisciplina" x="10" y="33" fontWeight="bold"
+					 text="Disciplina: {DataBind.instance().nomeDisciplina}"/>
+			<s:Label id="labelProfessor" x="11" y="53" fontWeight="bold"
+					 text="Professor: {DataBind.instance().nomeProfessor}"/>
+			
+		</mx:Canvas>
+	</s:BorderContainer>
+	
+</s:ItemRenderer>

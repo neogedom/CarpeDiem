@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:MXDataGridItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+						  xmlns:s="library://ns.adobe.com/flex/spark"
+						  xmlns:mx="library://ns.adobe.com/flex/mx"
+						  width="75" height="20" focusEnabled="true">
+	<fx:Script>
+		<![CDATA[
+			import br.com.carpediem.modelo.Disciplina;
+			import br.com.carpediem.visao.popups.TelaTabelaFaltas;
+			import mx.controls.Alert;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			
+			protected function abreTelaFaltas(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				
+				parentDocument.selecionaLinha();
+				var painel1:TelaTabelaFaltas = new TelaTabelaFaltas();
+				PopUpManager.addPopUp(painel1, DisplayObject(this.parentApplication), true);
+				PopUpManager.centerPopUp(painel1);
+			}
+			
+			
+		]]>
+	</fx:Script>
+	<s:Button width="75" label="Faltas" click="abreTelaFaltas(event)"
+			  toolTip="Clique para abrir a tela de endereço."/>
+</s:MXDataGridItemRenderer>
+

@@ -1,0 +1,475 @@
+/* CSS file */
+
+/* Global
+{
+	color: #FFFFFF;
+	themeColor: #000000;
+} */
+
+ Application
+{
+	color: #FFFFFF;
+	backgroundColor: #000000;
+	backgroundImage: Embed(source="../../assets/images/theme3.jpg");
+	backgroundSize: auto;
+	paddingTop: 0;
+} 
+
+Accordion
+{
+	downSkin: Embed(source="../../assets/skins/blendSkin.swf", symbol="DropDownMS_ClosedDOWN");
+    overSkin: Embed(source="../../assets/skins/blendSkin.swf", symbol="DropDownMS_ClosedOVER");
+    upSkin: Embed(source="../../assets/skins/blendSkin.swf", symbol="DropDownMS_ClosedUP");
+    color: #00CCCC;
+    textRollOverColor: #ffffff;
+    textSelectedColor: #ffffff;
+    fontFamily: Arial;
+    fontSize: 11;
+    fontWeight: normal;
+	borderSkin: Embed(skinClass='TextArea_borderSkin');
+	headerStyleName: accordionHeader;
+} 
+
+Alert
+{
+	paddingTop: 10;
+	paddingBottom: 10;
+	borderAlpha: 0.0;
+	backgroundAlpha: 0.0;
+	backgroundColor: #FFFFFF;
+	titleStyleName: Embed(source="../../assets/skins/blendSkin.swf", symbol="alertTitle");
+    fill-colors: #8F0F0F, #470808, #000000;
+    border-skin: ClassReference("tabNavborderBG");
+	headerHeight: 10;
+	controlBarStyleName: alertControlBar;
+	
+} 
+
+Button
+{
+	color: #ffffff;
+	textRollOverColor: #000000;
+	skin: Embed(skinClass='PopUpButton_skin');
+	paddingLeft: 10;
+	
+}
+
+ButtonBar
+{
+	firstButtonStyleName: buttonBarFirstButton;
+	buttonStyleName: buttonBarButton;
+	lastButtonStyleName: buttonBarLastButton;
+	color: #E0E0E0;
+	
+}
+
+CheckBox
+{
+	skin: Embed(skinClass='CheckBox_icon');
+	icon: Embed(skinClass='CheckBox_icon');
+}
+
+ComboBox
+{
+	skin: Embed(skinClass='Button_skin');
+	color: #FFFFFF;
+	useRollOver: true;
+	dropdownStyleName: comboBoxDropdown;
+	themeColor: #FFFFFF;
+	textRollOverColor: #DCDCDC;
+	textSelectedColor: #9A9A9A;
+	
+}
+
+CursorManager
+{
+	busyCursorSkin: Embed(source="../../assets/skins/blendSkin.swf", symbol="CursorManager_busyCursor");
+}
+
+ColorPicker
+{
+	skin: Embed(skinClass='ColorPicker_skin');
+	focusAlpha: 0;
+	
+}
+
+ControlBar
+{
+	paddingLeft: 25;
+	paddingRight: 25;
+    fill-colors: #8F0F0F, #470808, #000000;
+    border-skin: ClassReference("titleWindowborderBG");
+}
+
+DataGrid
+{
+	color: #000000;
+	borderSkin: Embed(skinClass='DropDownMS_BG');
+	selectionColor: #606060;
+	alternatingItemColors:#cccccc, #B10101;
+	rollOverColor: #590000;
+	textSelectedColor: #DCDCDC;
+	fontWeight: normal;
+	textRollOverColor: #CECECE;
+	headerStyleName: dataGridHeader;
+	headerBackgroundSkin: Embed(skinClass='boxBtn');
+	textAlign: center;
+}
+
+DateChooser
+{
+	nextMonthSkin: Embed(skinClass='DateChooser_nextMonthSkin');
+	prevMonthSkin: Embed(skinClass='DateChooser_prevMonthSkin');
+	color: #981010;
+	todayStyleName: dateChooserToday;
+	disabledColor: #414141;
+	selectionColor: #7C7C7C;
+	rollOverColor: #E7E7E7;
+	todayColor: #BB9090;
+	headerStyleName: dateChooserHeader;
+	fontFamily: Arial;
+	weekDayStyleName: dateChooserWeekDay;
+	backgroundColor: #ADADAD;
+	cornerRadius: 11;
+	borderColor: #BD0000;
+	
+}
+
+HRule
+{
+	shadowColor: #222222;
+}
+
+VRule
+{
+	shadowColor: #222222;
+}
+
+HScrollBar
+{
+	upArrowSkin: Embed(skinClass='HScrollBar_upArrowSkin');
+	downArrowSkin: Embed(skinClass='HScrollBar_downArrowSkin');
+	thumbSkin: Embed(skinClass='VScrollBar_thumbSkin');
+	trackSkin: Embed(skinClass='VScrollBar_trackSkin');
+	
+}
+
+VScrollBar
+{
+	upArrowSkin: Embed(skinClass='VScrollBar_upArrowSkin');
+	downArrowSkin: Embed(skinClass='VScrollBar_downArrowSkin');
+	thumbSkin: Embed(skinClass='VScrollBar_thumbSkin');
+	trackSkin: Embed(skinClass='VScrollBar_trackSkin');
+	
+}
+
+Label
+{
+	color: #FFFFFF;
+}
+
+LinkButton
+{
+	upSkin: Embed(skinClass='hyperBtn_Up');
+	overSkin: Embed(skinClass='hyperBtn_Over');
+	downSkin: Embed(skinClass='hyperBtn_Down');
+	textRollOverColor: #CBCBCB;
+	textSelectedColor: #B4B4B4;
+	
+}
+
+List
+{
+	color: #000000;
+	backgroundColor: #cccccc;
+}
+
+TileList
+{
+	backgroundColor: #cccccc;
+}
+
+MenuBar
+{
+	itemUpSkin: Embed(skinClass='boxBtn');
+	itemOverSkin: Embed(skinClass='boxBtn');
+	itemDownSkin: Embed(skinClass='boxBtn');
+	color: #F1F1F1;
+
+}
+
+HorizontalList
+{
+	backgroundColor: #cccccc;
+}
+
+Panel
+{
+	cornerRadius: 18;
+	paddingLeft: 5;
+	paddingRight: 5;
+	paddingTop: 5;
+	paddingBottom: 5;
+	controlBarStyleName: panelControlBar;
+	titleBackgroundSkin: Embed(skinClass='title_BGskin');
+	roundedBottomCorners: true;
+	backgroundAlpha: 0.0;
+	borderAlpha: 0.0;
+}
+
+ProgressBar
+{
+	trackSkin: Embed(skinClass='ProgressBar_trackSkin');
+	barSkin: Embed(skinClass='ProgressBar_barSkin');
+	indeterminateSkin: Embed(skinClass='ProgressBar_indeterminateSkin');
+	
+}
+
+RadioButton
+{
+	skin: Embed(skinClass='RadioButton_icon');
+	icon: Embed(skinClass='RadioButton_icon');
+}
+
+NumericStepper
+{
+	downArrowSkin: Embed(skinClass='NumericStepper_downArrowSkin');
+	upArrowSkin: Embed(skinClass='NumericStepper_upArrowSkin');
+	
+}
+
+PopUpButton
+{
+	upSkin: Embed(skinClass='tabs_unselected');
+	overSkin: Embed(skinClass='tabs_selected');
+	downSkin: Embed(skinClass='tabs_unselected');
+	textRollOverColor: #FFFFFF;
+	textSelectedColor: #DFDFDF;
+	icon: Embed(skinClass='PopUpButton_popUpIcon');
+	horizontalGap: 7;
+	popUpOverSkin: Embed(skinClass='popupBtn');
+	popUpDownSkin: Embed(skinClass='popupBtn2');
+	
+}
+
+HSlider
+{
+	thumbSkin: Embed(source="../../assets/skins/blendSkin.swf", symbol="Slider_thumbSkin");
+}
+
+VSlider
+{
+	thumbSkin: Embed(source="../../assets/skins/blendSkin.swf", symbol="Slider_thumbSkin");
+}
+
+ TabNavigator
+{
+	borderStyle: none;
+    backgroundAlpha: 0;
+    backgroundColor: #283346;
+    fill-colors: #8F0F0F, #470808, #000000;
+	tabStyleName: "myTabs";
+	selectedTabTextStyleName: "myTabs";
+    border-skin: ClassReference("tabNavborderBG");
+}  
+
+TabBar
+{
+	firstTabStyleName: tabBarFirstTab;
+	tabStyleName: tabBarTab;
+	lastTabStyleName: tabBarLastTab;
+	
+}
+
+TextInput
+{
+	borderSkin: Embed(skinClass='searchBG');
+	paddingLeft: 7;
+	paddingTop: 2;
+	color: #991010;
+	
+}
+
+TextArea
+{
+	borderSkin: Embed(skinClass='TextArea_borderSkin');
+	paddingLeft: 7;
+	paddingRight: 7;
+	paddingTop: 2;
+	color: #991010;
+}
+
+TitleWindow
+{
+	cornerRadius: 18;
+	paddingLeft: 5;
+	paddingRight: 5;
+	paddingTop: 5;
+	paddingBottom: 5;
+    fill-colors: #000000, #470808, #350606;
+	controlBarStyleName: panelControlBar;
+	titleBackgroundSkin: Embed(skinClass='title_BGskin');
+    border-skin: ClassReference("titleWindowborderBG");
+	roundedBottomCorners: true;
+	backgroundAlpha: 0.0;
+	borderAlpha: 0.0;
+}
+
+Tree
+{
+	borderSkin: Embed(skinClass='TextArea_borderSkin');
+	rollOverColor: #878787;
+	selectionColor: #DF0000;
+	defaultLeafIcon: Embed(skinClass='Tree_folderOpenIcon');
+	folderClosedIcon: Embed(skinClass='Tree_folderClosedIcon');
+	folderOpenIcon: Embed(skinClass='Tree_defaultLeafIcon');
+	paddingLeft: 5;
+	paddingTop: 5;
+	paddingBottom: 2;
+	
+}
+
+.myTabs {
+	color: #ffffff;
+	borderColor: #666666;
+	textRollOverColor: #CCCCCC;
+	upSkin: Embed(source="../../assets/skins/blendSkin.swf", symbol="tabs_selected");
+	overSkin: Embed(source="../../assets/skins/blendSkin.swf", symbol="tabs_selected");
+	downSkin: Embed(source="../../assets/skins/blendSkin.swf", symbol="tabs_selected");
+	disabledSkin: Embed(source="../../assets/skins/blendSkin.swf", symbol="tabs_selected");
+ 	selectedUpSkin: Embed(source="../../assets/skins/blendSkin.swf", symbol="tabs_unselected");
+	selectedOverSkin: Embed(source="../../assets/skins/blendSkin.swf", symbol="tabs_unselected");
+	selectedDownSkin: Embed(source="../../assets/skins/blendSkin.swf", symbol="tabs_unselected");
+	selectedDisabledSkin: Embed(source="../../assets/skins/blendSkin.swf", symbol="tabs_unselected"); 
+}
+
+
+.alertControlBar
+{
+	backgroundImage: Embed(skinClass='alertTitle');
+	backgroundAlpha: 0.0;
+	borderSkin: Embed(skinClass='alertTitle');
+	color: #FFFFFF;
+	paddingTop: 25;
+	fontWeight: bold;
+}
+.dateChooserToday
+{
+	fontFamily: Arial;
+	fontWeight: bold;
+}
+/*@font-face
+{
+	fontFamily: "Verdana";
+	fontWeight: normal;
+	fontStyle: normal;
+	src: local("Verdana");
+}*/
+.dateChooserHeader
+{
+	fontFamily: Arial;
+	fontWeight: bold;
+}
+/* @font-face
+{
+	fontFamily: Cambria;
+	fontWeight: normal;
+	fontStyle: normal;
+	src: local("Cambria");
+}
+@font-face
+{
+	fontFamily: "Angsana New";
+	fontWeight: normal;
+	fontStyle: normal;
+	src: local("Angsana New");
+} */
+.dateChooserWeekDay
+{
+	fontFamily: Arial;
+}
+.comboBoxDropdown
+{
+	cornerRadius: 5;
+	backgroundColor: #616161;
+	borderStyle: solid;
+	borderColor: #B7BABC;
+	rollOverColor: #363636;
+	selectionColor: #980000;
+}
+.accordionHeader
+{
+	skin: Embed(skinClass='AccordionHeader_skin');
+}
+.buttonBarFirstButton
+{
+	upSkin: Embed(skinClass='hyperBtn_Up');
+	overSkin: Embed(skinClass='hyperBtn_Over');
+	downSkin: Embed(skinClass='hyperBtn_Down');
+	selectedUpSkin: Embed(skinClass='hyperBtn_Over');
+	selectedOverSkin: Embed(skinClass='hyperBtn_Up');
+	selectedDownSkin: Embed(skinClass='hyperBtn_Down');
+	textRollOverColor: #C4C4C4;
+	textSelectedColor: #868686;
+}
+.buttonBarButton
+{
+	upSkin: Embed(skinClass='hyperBtn_Up');
+	overSkin: Embed(skinClass='hyperBtn_Over');
+	downSkin: Embed(skinClass='hyperBtn_Down');
+	selectedUpSkin: Embed(skinClass='hyperBtn_Over');
+	selectedOverSkin: Embed(skinClass='hyperBtn_Up');
+	selectedDownSkin: Embed(skinClass='hyperBtn_Down');
+	textRollOverColor: #CCCCCC;
+	textSelectedColor: #9A9A9A;
+}
+.buttonBarLastButton
+{
+	upSkin: Embed(skinClass='hyperBtn_Up');
+	overSkin: Embed(skinClass='hyperBtn_Over');
+	downSkin: Embed(skinClass='hyperBtn_Down');
+	selectedUpSkin: Embed(skinClass='hyperBtn_Over');
+	selectedOverSkin: Embed(skinClass='hyperBtn_Up');
+	selectedDownSkin: Embed(skinClass='hyperBtn_Down');
+	textRollOverColor: #CFCFCF;
+	textSelectedColor: #8E8E8E;
+}
+.tabBarFirstTab
+{
+	upSkin: Embed(skinClass='popupBtn');
+	overSkin: Embed(skinClass='popupBtn2');
+	downSkin: Embed(skinClass='popupBtn');
+	selectedUpSkin: Embed(skinClass='popupBtn2');
+	selectedOverSkin: Embed(skinClass='popupBtn');
+	selectedDownSkin: Embed(skinClass='popupBtn2');
+	textRollOverColor: #E9E9E9;
+	textSelectedColor: #BCBCBC;
+}
+.tabBarTab
+{
+	upSkin: Embed(skinClass='popupBtn');
+	overSkin: Embed(skinClass='popupBtn2');
+	downSkin: Embed(skinClass='popupBtn');
+	selectedUpSkin: Embed(skinClass='popupBtn2');
+	selectedOverSkin: Embed(skinClass='popupBtn');
+	selectedDownSkin: Embed(skinClass='popupBtn2');
+	textRollOverColor: #E1E1E1;
+	textSelectedColor: #B3B2B2;
+}
+.tabBarLastTab
+{
+	upSkin: Embed(skinClass='popupBtn');
+	overSkin: Embed(skinClass='popupBtn2');
+	downSkin: Embed(skinClass='popupBtn');
+	selectedUpSkin: Embed(skinClass='popupBtn2');
+	selectedOverSkin: Embed(skinClass='popupBtn');
+	selectedDownSkin: Embed(skinClass='popupBtn2');
+	textRollOverColor: #DDDDDD;
+	textSelectedColor: #A9A9A9;
+}
+.dataGridHeader
+{
+	color: #FFFFFF;
+	fontWeight: bold;
+	textAlign: center;
+} 

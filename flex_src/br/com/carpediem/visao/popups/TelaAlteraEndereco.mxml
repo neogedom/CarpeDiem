@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+				xmlns:s="library://ns.adobe.com/flex/spark"
+				xmlns:mx="library://ns.adobe.com/flex/mx"
+				xmlns:componente="com.flexpernambuco.controls.*"
+				width="838" height="186" close="PopUpManager.removePopUp(this)"
+				creationComplete="init(event)" layout="absolute" showCloseButton="true"
+				title="Endereço"
+				toolTip="Para editar um endereço, acesse a tela de consulta de Endereços">
+	
+	<fx:Script>
+		<![CDATA[
+			import br.com.carpediem.controle.DataBind;
+			import br.com.carpediem.controle.events.OKEvent;
+			import br.com.carpediem.modelo.Cidade;
+			import br.com.carpediem.modelo.Endereco;
+			import br.com.carpediem.modelo.Estado;
+			import br.com.carpediem.modelo.PessoaFisica;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			[Bindable]
+			public var al:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alendereco:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var endereco:Endereco = new Endereco();
+			
+			protected function init(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				remoteObject.getEnderecoPorPessoa(DataBind.instance().pessoaLinhaSelecionada.codigoPessoa);
+			}
+		
+				
+			protected function resultadoEndereco(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				endereco = event.result as Endereco;
+				campoCodigo.text = (endereco.codigo).toString();
+				campoRua.text = endereco.rua;
+				campoBairro.text = endereco.bairro;
+				campoNumero.text = endereco.numero;
+				campoComplemento.text = endereco.complemento;
+				campoCEP.text = endereco.cep;
+				campoCidade.text = endereco.cidade.nome;
+				campoEstado.text = endereco.cidade.estado.uf;
+			}
+			
+			protected function falha(event:FaultEvent):void
+			{
+				// TODO Auto-generated method stub
+				Alert.show("- Erro no BlazeDS\n" + event.fault.faultString);
+			}
+			
+			public function AlterarEndereco ():void
+			{
+				var painel:TelaTabelaEndereco = TelaTabelaEndereco(PopUpManager.createPopUp(this, TelaTabelaEndereco, true));
+				painel.addEventListener(OKEvent.OK, onPopUpClose, false, 0, true);
+				PopUpManager.centerPopUp(painel);
+			}
+			
+			private function onPopUpClose(evento:OKEvent):void
+			{
+				campoCodigo.text = (DataBind.instance().enderecoPopUp.codigo).toString();
+				campoRua.text = DataBind.instance().enderecoPopUp.rua;
+				campoBairro.text = DataBind.instance().enderecoPopUp.bairro;
+				campoNumero.text = DataBind.instance().enderecoPopUp.numero;
+				campoComplemento.text = DataBind.instance().enderecoPopUp.complemento;
+				campoCEP.text = DataBind.instance().enderecoPopUp.cep;
+				campoCidade.text = DataBind.instance().enderecoPopUp.cidade.nome;
+				campoEstado.text = DataBind.instance().enderecoPopUp.cidade.estado.uf;
+			}
+			
+			public function Concluir ():void
+			{
+				var cidade:Cidade = new Cidade();
+				var estado:Estado = new Estado();
+				
+				endereco.codigo = parseInt(campoCodigo.text);
+				endereco.rua = campoRua.text;
+				endereco.bairro = campoBairro.text;
+				endereco.numero = campoNumero.text;
+				endereco.complemento = campoComplemento.text;
+				endereco.cep = campoCEP.text;
+				
+				estado.uf = campoEstado.text;
+				cidade.estado = estado;
+				
+				cidade.nome = campoCidade.text;
+				endereco.cidade = cidade;
+				
+				DataBind.instance().enderecoPessoaFisicaSelecionada = endereco;
+				PopUpManager.removePopUp(this);
+			}
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<s:RemoteObject id="remoteObject" destination="FlexRemoto" fault="falha(event)">
+			<s:method name="getEnderecoPorPessoa" result="resultadoEndereco(event)" fault="falha(event)"/>
+		</s:RemoteObject>
+	</fx:Declarations>
+	
+	<s:Label x="10" y="37" text="Código:"/>
+	<componente:MasterTextInput id="campoCodigo" x="10" y="56" width="63" editable="false"/>
+	<s:Label x="91" y="37" text=" Rua:"/>
+	<componente:MasterTextInput id="campoRua" x="91" y="56" width="286" editable="false"/>
+	<s:Label x="390" y="36" text="Bairro:"/>
+	<componente:MasterTextInput id="campoBairro" x="390" y="56" width="305" editable="false"/>
+	<s:Label x="706" y="32" text="Número:"/>
+	<componente:MasterTextInput id="campoNumero" x="703" y="56" width="109" editable="false"/>
+	<s:Label x="9" y="93" text="Complemento:"/>
+	<componente:MasterTextInput id="campoComplemento" x="10" y="118" width="315" editable="false"/>
+	<s:Label x="335" y="92" text="CEP:"/>
+	<componente:MasterTextInput id="campoCEP" x="333" y="118" width="213" blankMaskChar=" "
+								editable="false"/>
+	<s:Label x="554" y="93" text="Estado:"/>
+	<s:Label x="653" y="93" text="Cidade:"/>
+	<componente:MasterTextInput id="campoEstado" x="554" y="118" width="85" editable="false"/>
+	<componente:MasterTextInput id="campoCidade" x="653" y="118" width="159" editable="false"/>
+	<s:Button x="10" y="154" label="Alterar Endereço" click="AlterarEndereco()" enabled="{DataBind.instance().camposEnderecoEditavel}"/>
+	<s:Button x="764" y="154" label="Concluir" click="Concluir()" enabled="{DataBind.instance().camposEnderecoEditavel}"/>
+</mx:TitleWindow>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<print:Report xmlns:fx="http://ns.adobe.com/mxml/2009"
+			  xmlns:s="library://ns.adobe.com/flex/spark"
+			  xmlns:mx="library://ns.adobe.com/flex/mx"
+			  xmlns:print="org.print.*"
+			  xmlns:components="br.com.carpediem.reports.components.*"
+			  backgroundColor="0x333333" color="#F7F1F1" fontStyle="normal" fontWeight="normal">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<mx:DateFormatter id="dateFormat" formatString="DD/MM/YYYY"/>
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			
+			[Bindable]
+			public var professor:String = "";
+			[Bindable]
+			public var disciplina:String = "";
+			[Bindable]
+			public var log:String = "";
+			
+			
+			override public function loadData():void
+			{
+				this.professor = this.dataProvider.turmaCodigo;
+				this.log = this.dataProvider.identificador;
+				this.disciplina = this.dataProvider.total;
+				
+			}
+		]]>
+	</fx:Script>
+	
+	<print:Body width="100%" height="100%">
+		<s:BorderContainer width="100%" height="100%">
+			<s:Label x="10" y="6" color="#070707" fontFamily="Verdana" fontStyle="normal"
+					 fontWeight="bold" text="Log:" textDecoration="none"/>
+			<mx:HRule x="10" y="29" width="473" height="6"/>
+			<s:BorderContainer width="100%" height="100%">
+				<s:Label x="10" y="14" color="#070707" fontFamily="Verdana" fontStyle="normal"
+						 fontWeight="bold" text="Log:" textDecoration="none"/>
+				<s:BorderContainer width="100%" height="100%">
+					<s:Label x="13" y="9" color="#070707" fontFamily="Verdana" fontStyle="normal"
+							 fontWeight="bold" text="PROFESSOR: {professor}" textDecoration="none"/>
+					<s:Label x="13" y="32" color="#070707" fontFamily="Verdana" fontStyle="normal"
+							 fontWeight="bold" text="DISCIPLINA: {disciplina}" textDecoration="none"/>
+					<s:Label y="84" color="#070707" fontFamily="Verdana" fontStyle="normal"
+							 fontWeight="bold" horizontalCenter="-2" text="COMUNICADO"
+							 textDecoration="none"/>
+					<s:Label x="8" y="118" color="#070707" fontFamily="Verdana" fontSize="35"
+							 fontStyle="normal" fontWeight="bold" text="{log}" textDecoration="none"/>
+					<mx:HRule y="104" width="473" height="6" horizontalCenter="-2"/>
+				</s:BorderContainer>
+			</s:BorderContainer>
+		</s:BorderContainer>
+	</print:Body>
+	
+</print:Report>

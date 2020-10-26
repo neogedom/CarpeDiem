@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<print:Report xmlns:fx="http://ns.adobe.com/mxml/2009"
+			  xmlns:s="library://ns.adobe.com/flex/spark"
+			  xmlns:mx="library://ns.adobe.com/flex/mx"
+			  xmlns:print="org.print.*"
+			  xmlns:components="br.com.carpediem.reports.components.*"
+			  backgroundColor="0x333333" color="#F7F1F1" fontStyle="normal" fontWeight="normal">
+	<components:Header width="100%" height="74" fontFamily="Verdana" id="header">
+	</components:Header>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<mx:DateFormatter id="dateFormat" formatString="DD/MM/YYYY"/>
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			
+			[Bindable]
+			public var filtro:String = "";
+			[Bindable]
+			public var total:String = "";
+			[Bindable]
+			public var identificador:String = "";
+			
+			override public function loadData():void
+			{
+				this.dgReport.dataProvider = this.dataProvider.tabela;
+				this.header.titulo = this.dataProvider.label;
+				this.footer.total = this.dataProvider.total;
+				this.filtro = this.dataProvider.turmaCodigo;
+				this.identificador = this.dataProvider.identificador;
+				this.total = this.dataProvider.total;
+				
+			}
+		]]>
+	</fx:Script>
+	
+	<print:Body width="100%" height="100%">
+		<s:BorderContainer width="100%" height="100%">
+			<s:Label x="5" y="6" color="#070707" fontFamily="Verdana" fontStyle="normal"
+					 fontWeight="bold" text="{identificador}: {filtro}" textDecoration="none"/>
+			<print:ReportDataGrid id="dgReport" x="0" y="29" width="100%" height="100%">
+				<print:columns>
+					<mx:DataGridColumn headerText="Nome da Sala" width="200" dataField="nome" />
+					<mx:DataGridColumn headerText="Professor"  dataField="professor.nome" />
+					<mx:DataGridColumn headerText="Disciplina" dataField="disciplina.nome" />
+					<mx:DataGridColumn headerText="Com Senha?"  dataField="travada" />
+					<mx:DataGridColumn headerText="Trancada?"  dataField="comSenha" />
+				</print:columns>
+			</print:ReportDataGrid>
+		</s:BorderContainer>
+	</print:Body>
+	<components:Footer width="100%" height="74" id="footer">
+	</components:Footer>
+	
+</print:Report>

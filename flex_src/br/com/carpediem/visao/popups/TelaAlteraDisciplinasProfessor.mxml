@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				xmlns:s="library://ns.adobe.com/flex/spark" 
+				xmlns:mx="library://ns.adobe.com/flex/mx" layout="absolute" width="400" height="300" title="Disciplinas" 
+				close="PopUpManager.removePopUp(this)" showCloseButton="true" creationComplete="init(event)">
+	<fx:Script>
+		<![CDATA[
+			import br.com.carpediem.controle.DataBind;
+			import br.com.carpediem.modelo.Disciplina;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.DataGridEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			[Bindable]
+			public var rowNumber:int;
+			[Bindable]
+			public var itemSelecionado:String;
+			[Bindable]
+			public var al:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var aldisciplina:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alnome:ArrayCollection = new ArrayCollection();
+			
+			protected function init(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				tabelaConsultaDisciplinasProfessor.editable = DataBind.instance().tabelaDisciplinaProfessorEditavel;
+				remoteObject.listaDisciplinaProfessores(DataBind.instance().pessoaLinhaSelecionada.nome, DataBind.instance().pessoaLinhaSelecionada.sobrenome);
+				remoteObject.listaDisciplinas();
+			}
+			
+			
+			protected function resultadoDisciplinas(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var cont:int;
+				var disciplina:Disciplina;
+				al = event.result as ArrayCollection;
+				for (cont = 0; al.length; cont++)
+				{
+					disciplina = al.getItemAt(cont) as Disciplina;
+					aldisciplina.addItem(disciplina);
+				}
+			}
+			
+			private function falha (e:FaultEvent):void
+			{
+				Alert.show("- Erro no BlazeDS\n" + e.fault.faultString);
+			}
+			
+			public function salvarDados():void
+			{
+				tabelaConsultaDisciplinasProfessor.editable = false;
+				
+			}
+			
+			public function removerDados():void
+			{
+				aldisciplina.removeItemAt(tabelaConsultaDisciplinasProfessor.selectedIndex);
+				
+			}
+			
+			public function cancelarEdicao():void
+			{
+				tabelaConsultaDisciplinasProfessor.editable = false;
+				aldisciplina.removeAll();
+				remoteObject.listaDisciplinaProfessores();
+				Alert.show("A edição para esta tabela foi cancelada!");
+				
+			}
+			
+			private function concluir():void
+			{
+				DataBind.instance().disciplinasProfessorSelecionado = aldisciplina;
+				PopUpManager.removePopUp(this);
+			}
+			
+			public function clickHandler(event:Event):void
+			{
+				//Alert.show(event.currentTarget.selectedItem);
+				itemSelecionado = event.currentTarget.selectedItem;
+				
+			}
+		
+			
+			protected function resultadoDisciplinasTodas(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				var cont:int;
+				var disciplina:Disciplina;
+				al = event.result as ArrayCollection;
+				for (cont = 0; al.length; cont++)
+				{
+					disciplina = al.getItemAt(cont) as Disciplina;
+					alnome.addItem(disciplina.nome);
+				}
+			}
+			
+			public function deletaDisciplina():void
+			{
+				if (!DataBind.instance().tabelaDisciplinaProfessorEditavel)
+				{
+					Alert.show("Libere a edição de dados na tabela de professores para poder deletar alguma disciplina!", "Atenção");
+				}
+				else
+				{
+					aldisciplina.removeItemAt(tabelaConsultaDisciplinasProfessor.selectedIndex);
+				}
+			}
+			
+			protected function novaDisciplina(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				var disciplina:Disciplina = new Disciplina ();
+				aldisciplina.addItem(disciplina);
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<s:RemoteObject id="remoteObject" destination="FlexRemoto" fault="falha(event)">
+			<s:method name="listaDisciplinaProfessores" result="resultadoDisciplinas(event)" fault="falha(event)" />
+			<s:method name="listaDisciplinas" result="resultadoDisciplinasTodas(event)" fault="falha(event)" />
+		</s:RemoteObject>
+	</fx:Declarations>
+	<mx:DataGrid id="tabelaConsultaDisciplinasProfessor" x="9" y="29" width="380" height="240"
+				 color="#4C2600" dataProvider="{aldisciplina}" variableRowHeight="true">
+		<mx:columns>
+				<mx:DataGridColumn dataField="nome" 
+								   headerText="Nome" sortable="false">
+					<mx:itemEditor>
+						<fx:Component>
+							<mx:ComboBox selectedItem="{outerDocument.itemSelecionado}" click="outerDocument.clickHandler(event)" dataProvider="{outerDocument.alnome}" />
+						</fx:Component>
+					</mx:itemEditor>
+				</mx:DataGridColumn>
+			<mx:DataGridColumn dataField="operacoes" headerText="Operações">
+				<mx:itemRenderer>
+					<fx:Component>
+						<mx:Image source="@Embed('../../assets/images/delete0.png')" click="outerDocument.deletaDisciplina()" />					
+					</fx:Component>
+				</mx:itemRenderer>	
+			</mx:DataGridColumn>
+		</mx:columns>
+	</mx:DataGrid>
+	<s:Button x="273" y="277" width="117" label="Concluir" click="concluir()" enabled="{DataBind.instance().tabelaDisciplinaProfessorEditavel}"/>
+	<s:Button x="10" y="277" width="132" label="Nova Disciplina" click="novaDisciplina(event)" enabled="{DataBind.instance().tabelaDisciplinaProfessorEditavel}"/>
+</mx:TitleWindow>

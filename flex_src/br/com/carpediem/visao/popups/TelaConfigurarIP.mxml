@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx" width="348" height="128" close="fechaJanela()" xmlns:controls="com.flexpernambuco.controls.*">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import br.com.carpediem.controle.DataBind;
+			
+			import mx.controls.Alert;
+			import mx.core.FlexGlobals;
+			import mx.managers.PopUpManager;
+			
+			private function exportaValores():void
+			{
+				DataBind.instance().IPServidor = IPServidor.text;
+				fechaJanela();
+			}
+			
+			private function fechaJanela():void
+			{
+				PopUpManager.removePopUp(this);
+			}
+		]]>
+	</fx:Script>
+	<s:Label x="28" y="10" fontSize="17" fontWeight="bold" text="Digite o IP do servidor:"/>
+	<controls:MasterTextInput id="IPServidor" x="28" y="34" width="299"/>
+	<s:Button x="241" y="64" label="Confirmar" click="exportaValores();"/>
+</s:TitleWindow>

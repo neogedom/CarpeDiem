@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<print:Report xmlns:fx="http://ns.adobe.com/mxml/2009"
+			  xmlns:s="library://ns.adobe.com/flex/spark"
+			  xmlns:mx="library://ns.adobe.com/flex/mx"
+			  xmlns:print="org.print.*"
+			  xmlns:components="br.com.carpediem.reports.components.*"
+			  backgroundColor="0x333333" color="#F7F1F1" fontStyle="normal" fontWeight="normal" xmlns:fromatter="br.com.carpediem.controle.fromatter.*">
+	<components:Header width="100%" height="74" fontFamily="Verdana" id="header">
+	</components:Header>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<mx:NumberFormatter id="numberFormat" precision="1"/>
+		<fromatter:VAFormatter id="vaFormat" />
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.formatters.NumberFormatter;
+
+			
+			[Bindable]
+			public var filtro:String = "";
+			[Bindable]
+			public var total:String = "";
+			[Bindable]
+			public var identificador:String = "";
+			
+			override public function loadData():void
+			{
+				this.dgReport.dataProvider = this.dataProvider.tabela;
+				this.header.titulo = this.dataProvider.label;
+				this.footer.total = this.dataProvider.total;
+				this.filtro = this.dataProvider.turmaCodigo;
+				this.identificador = this.dataProvider.identificador;
+				this.total = this.dataProvider.total;
+				
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<print:Body width="100%" height="100%">
+		<s:BorderContainer width="100%" height="100%">
+			<s:Label x="5" y="6" color="#070707" fontFamily="Verdana" fontStyle="normal"
+					 fontWeight="bold" text="{identificador}" textDecoration="none"/>
+			<s:Label x="5" y="29" color="#070707" fontFamily="Verdana" fontStyle="normal"
+					 fontWeight="bold" text="{filtro}" textDecoration="none"/>
+			<print:ReportDataGrid id="dgReport" x="2" y="47" width="100%" height="100%">
+				<print:columns>
+					<mx:DataGridColumn headerText="Nome" dataField="aluno.nome" />
+					<mx:DataGridColumn headerText="Sobrenome" dataField="aluno.sobrenome" />
+					<mx:DataGridColumn headerText="Porcentagem de aulas assistidas" dataField="porcentagem" />
+					<mx:DataGridColumn headerText="VA1" dataField="VA1">
+						<mx:itemRenderer>
+							<fx:Component>
+								<mx:Label text="{outerDocument.vaFormat.doFormat(data.VA1)}" />
+							</fx:Component>
+						</mx:itemRenderer>
+					</mx:DataGridColumn>
+					<mx:DataGridColumn headerText="VA2" dataField="VA2">
+						<mx:itemRenderer>
+							<fx:Component>
+								<mx:Label text="{outerDocument.vaFormat.doFormat(data.VA2)}" />
+							</fx:Component>
+						</mx:itemRenderer>
+					</mx:DataGridColumn>
+					<mx:DataGridColumn headerText="VA3" dataField="VA3">
+						<mx:itemRenderer>
+							<fx:Component>
+								<mx:Label text="{outerDocument.vaFormat.doFormat(data.VA3)}" />
+							</fx:Component>
+						</mx:itemRenderer>
+					</mx:DataGridColumn>
+					<mx:DataGridColumn headerText="VA4" dataField="VA4">
+						<mx:itemRenderer>
+							<fx:Component>
+								<mx:Label text="{outerDocument.vaFormat.doFormat(data.VA4)}" />
+							</fx:Component>
+						</mx:itemRenderer>
+					</mx:DataGridColumn>
+					<mx:DataGridColumn headerText="VA5" dataField="VA5">
+						<mx:itemRenderer>
+							<fx:Component>
+								<mx:Label text="{outerDocument.vaFormat.doFormat(data.VA5)}" />
+							</fx:Component>
+						</mx:itemRenderer>
+					</mx:DataGridColumn>
+				</print:columns>
+			</print:ReportDataGrid>
+		</s:BorderContainer>
+	</print:Body>
+	<components:Footer width="100%" height="74" id="footer">
+	</components:Footer>
+	
+</print:Report>

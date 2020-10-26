@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   width="566" height="252" fontWeight="bold"
+			   close="PopUpManager.removePopUp(this)"
+			   creationComplete="init()"
+			   >
+	<s:states>
+		<s:State name="semSenha"/>
+		<s:State name="comSenha"/>
+	</s:states>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<s:RemoteObject id="remoteObject" destination="FlexRemoto" fault="falha(event)">
+			<s:method name="listaProfessores" result="resultadoProfessor(event);" fault="falha(event)" />
+			<s:method name="listaDisciplinaProfessores" result="resultadoDisciplina(event);" fault="falha(event)" />
+			<s:method name="alteraSala" result="resultadoSala(event);" fault="falha(event)" />
+			<s:method name="getSalaByNome" result="resultadoByNome(event)" fault="falha(event)" />
+		</s:RemoteObject>
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import br.com.carpediem.conexao.JAVARemoto;
+			import br.com.carpediem.conexao.RemoteDestination;
+			import br.com.carpediem.controle.DataBind;
+			import br.com.carpediem.controle.renderers.SalasItemRenderer;
+			import br.com.carpediem.modelo.Disciplina;
+			import br.com.carpediem.modelo.PessoaFisica;
+			import br.com.carpediem.modelo.Professor;
+			import br.com.carpediem.modelo.Sala;
+			import br.com.carpediem.visao.componentes.SalaVirtual;
+			import br.com.carpediem.visao.componentes.TelaInicial;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.core.Application;
+			import mx.events.CloseEvent;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			[Bindable]
+			public var sala:Sala = new Sala();
+			[Bindable]
+			public var nomes:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var sobrenomes:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var disciplinas:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var alprofessor:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var aldisciplina:ArrayCollection = new ArrayCollection();
+			
+			private function init ():void
+			{
+				
+				nomes.removeAll();
+				remoteObject.listaProfessores();
+				remoteObject.getSalaByNome(DataBind.instance().salaAlterada.nome);
+				if (DataBind.instance().nivelAcesso != 1) {
+					nomeProfessor.enabled = false;
+				}
+			}
+			
+			public function carregaDisciplina():void
+			{
+				remoteObject.listaDisciplinaProfessores(nomeProfessor.selectedItem, sobrenomes.getItemAt(nomeProfessor.selectedIndex).toString());
+			}
+			
+			public function resultadoProfessor (e:ResultEvent):void
+			{
+				var cont1:int;
+				var professor:Professor
+				alprofessor = e.result as ArrayCollection;
+				if (DataBind.instance().nivelAcesso == 1)
+				{
+					for (cont1 = 0; alprofessor.length; cont1++)
+					{
+						professor = Professor(alprofessor.getItemAt(cont1) as Professor);
+						nomes.addItem(professor.nome);
+						sobrenomes.addItem(professor.sobrenome);
+					}
+				}
+				else {
+					for (cont1 = 0; alprofessor.length; cont1++)
+					{
+						professor = Professor(alprofessor.getItemAt(cont1) as Professor);
+						if (professor.nome == DataBind.instance().usuarioAtual.pessoaFisica.nome)
+						{
+							nomes.addItem(professor.nome);
+							sobrenomes.addItem(professor.sobrenome);
+							nomeProfessor.selectedIndex = 0;
+							carregaDisciplina();
+						}
+					}
+				}
+			}
+			
+			public function resultadoDisciplina (e:ResultEvent):void
+			{
+				var cont1:int;
+				aldisciplina = e.result as ArrayCollection;
+				disciplinas.removeAll();
+				for (cont1 = 0; aldisciplina.length; cont1++)
+				{
+					var disciplina:Disciplina = Disciplina(aldisciplina.getItemAt(cont1) as Disciplina);
+					disciplinas.addItem(disciplina.nome);
+				}
+			}
+			
+			public function resultadoSala(e:ResultEvent):void
+			{
+				Alert.show("Sala alterada com sucesso!");
+			}
+			
+			public function falha (e:FaultEvent):void
+			{
+				Alert.show("- Falha no BlazeDS\n" + e.fault.faultString);
+			}
+			
+			
+			
+			private function geraCampoSenha():void
+			{
+				if (checkBoxSenha.selected)
+				{	
+					currentState = "comSenha";
+				}
+				else
+				{
+					currentState = "semSenha";
+					campoSenha.text = "";
+				}
+			}
+			
+			private function alterarSala():void
+			{
+				var room:Sala = new Sala();
+				var disciplina:Disciplina = new Disciplina();
+				var disciplina2:Disciplina = new Disciplina();
+				var professor:Professor = new Professor();
+				var professor2:Professor = new Professor();
+				
+				
+				professor2 = alprofessor.getItemAt(nomeProfessor.selectedIndex) as Professor;
+				professor.codigoProfessor = professor2.codigoProfessor;
+				professor.nome = nomeProfessor.selectedItem;
+				
+				disciplina2 = aldisciplina.getItemAt(nomeDisciplina.selectedIndex) as Disciplina;
+				disciplina.codigoDisciplina = disciplina2.codigoDisciplina;
+				disciplina.nome = nomeDisciplina.selectedItem;
+				
+				room.codigoSala = parseInt (campoCodigo.text);
+				room.nome = nomeSala.text;
+				room.disciplina = disciplina;
+				room.professor = professor;
+				room.comSenha = checkBoxSenha.selected;
+				room.travada = checkBoxTrancada.selected;
+				room.view = "ViewProfessor";
+				if (checkBoxSenha.selected){
+					room.senha = campoSenha.text;
+				}
+				
+				
+				remoteObject.alteraSala(room);
+				DataBind.instance().salaAlterada = room;
+				this.dispatchEvent( new CloseEvent( CloseEvent.CLOSE));
+				PopUpManager.removePopUp(this);
+				
+			}
+			
+			protected function resultadoByNome(event:ResultEvent):void
+			{	
+				// TODO Auto-generated method stub
+				var cont:int;
+				sala = event.result as Sala;
+				campoCodigo.text = (sala.codigoSala).toString();
+				nomeSala.text = sala.nome;
+				checkBoxSenha.selected = sala.comSenha;
+				checkBoxTrancada.selected = sala.travada;
+				//campoCapacidade
+				if (sala.comSenha)
+				{
+					campoSenha.text = sala.senha;
+				}
+				nomeDisciplina.selectedItem = sala.disciplina.nome;
+				if (DataBind.instance().nivelAcesso == 1)
+				{
+					nomeProfessor.selectedItem = sala.professor.nome;
+				}
+				
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:TextInput id="nomeSala" x="26" y="46" width="507"
+				 x.comSenha="143" width.comSenha="390"
+				 x.semSenha="143" width.semSenha="390"/>
+	<s:Label x="26" y="26" text="Nome da Sala:&#xd;"
+			 x.comSenha="143"
+			 x.semSenha="143" y.semSenha="27"/>
+	<s:TextInput id="campoCodigo" x="26" y="46" width="109"/>
+	<s:Label x="26" y="27" text="Código:"/>
+	<s:Label x="26" y="80" text="Professor:"/>
+	<s:ComboBox id="nomeProfessor" x="26" y="100" width="241" dataProvider="{nomes}" change="carregaDisciplina()"/>
+	<s:Label x="294" y="81" text="Disciplina:"/>
+	<s:CheckBox x="26" y="156" id="checkBoxSenha" label="Com Senha" click="geraCampoSenha()" />
+	<s:CheckBox id="checkBoxTrancada" x="118" y="156" label="Trancada"/>
+	<s:Label includeIn="comSenha" x="206" y="131" text="Senha:"/>
+	<s:TextInput id="campoSenha" focusIn="campoSenha.displayAsPassword = false" focusOut="campoSenha.displayAsPassword = true" visible.comSenha = "true" visible.semSenha="false"  x="206" y="151" width="180"/>
+	<s:Button includeIn="comSenha, semSenha" x="40" y="188" label="Criar" click="alterarSala()"
+			  label.comSenha="Alterar"
+			  label.semSenha="Alterar"/>
+	<s:ComboBox id="nomeDisciplina" includeIn="semSenha, comSenha" x="294" y="101" width="239"
+				dataProvider="{disciplinas}"/>
+</s:TitleWindow>

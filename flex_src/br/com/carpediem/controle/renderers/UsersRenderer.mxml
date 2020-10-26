@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:MXDataGridItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+						  xmlns:s="library://ns.adobe.com/flex/spark"
+						  xmlns:mx="library://ns.adobe.com/flex/mx"
+						  width="90" height="29" focusEnabled="true">
+	
+	<fx:Script>
+		<![CDATA[
+			import br.com.carpediem.controle.DataBind;
+			import br.com.carpediem.controle.Navegacao;
+			import mx.controls.Alert;
+			
+			[Embed(source="../../assets/images/mute.png")]
+			[Bindable]
+			public var imgClsMute:Class;
+			
+			[Embed(source="../../assets/images/unmute.png")]
+			[Bindable]
+			public var imgClsUnMute:Class;
+
+			
+			protected function kickar(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				parentDocument.kickar();
+			}
+	
+			
+			protected function cortarMic(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				parentDocument.cortarMicrofone();
+			}
+			
+			protected function manterChat(event:MouseEvent):void
+			{
+				if (cortarChatImg.source == imgClsMute)
+				{
+					parentDocument.cortarChat();
+					cortarChatImg.source = imgClsUnMute;
+				} else {
+					parentDocument.habilitarChat();
+					cortarChatImg.source = imgClsMute;
+				}
+				
+			}
+		]]>
+	</fx:Script>
+	
+	<s:Image source="@Embed('../../assets/images/kick.png')" click="kickar(event)" toolTip="Kickar usuário da sala" />
+	<s:Image id="cortarChatImg" x="32" y="1" click="manterChat(event)" source="{imgClsMute}"
+			 toolTip="Bloquear o chat para o usuário"/>
+	<s:Image x="57" y="0" width="23" height="29" click="cortarMic(event)"
+			 source="@Embed('../../assets/images/cut_mic.png')" toolTip="Cortar microfone do usuário"/>
+	
+</s:MXDataGridItemRenderer>

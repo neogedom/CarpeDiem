@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="712" height="310" close="PopUpManager.removePopUp(this)" creationComplete="init(event)" > 
+	
+	<fx:Script>
+		<![CDATA[
+			import br.com.carpediem.controle.DataBind;
+			import br.com.carpediem.controle.events.OKEvent;
+			import br.com.carpediem.modelo.Endereco;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			[Bindable]
+			public var al:ArrayCollection;
+
+			
+			protected function init(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				remoteObject.listaEnderecos();
+				
+			}
+			protected function selecionaEndereco(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				DataBind.instance().enderecoPopUp = tabelaEndereco.dataProvider.getItemAt(tabelaEndereco.selectedIndex) as Endereco;
+				this.dispatchEvent( new OKEvent (OKEvent.OK));
+				PopUpManager.removePopUp(this);
+			}
+			
+			public function resultado(evento:ResultEvent):void
+			{
+				al = evento.result as ArrayCollection;
+			}
+			
+			public function falha (evento:FaultEvent):void
+			{
+				Alert.show("- Falha no BlazeDS\n" + evento.fault.faultString);
+			}
+		
+			
+		]]>
+	</fx:Script>
+<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	<s:RemoteObject id="remoteObject" destination="FlexRemoto" fault="falha(event)">
+		<s:method name="listaEnderecos" result="resultado(event);" fault="falha(event)" />
+	</s:RemoteObject>
+	</fx:Declarations>
+	<s:DataGrid id="tabelaEndereco" x="10" y="10" width="690" height="234"
+				doubleClick= "selecionaEndereco(event)" requestedRowCount="4" dataProvider="{al}">
+		<s:columns>
+			<s:ArrayList>
+				<s:GridColumn dataField="codigo" headerText="Código" sortable="false"></s:GridColumn>
+				<s:GridColumn dataField="rua" headerText="Rua"></s:GridColumn>
+				<s:GridColumn dataField="bairro" headerText="Bairro"></s:GridColumn>
+				<s:GridColumn dataField="numero" headerText="Número"></s:GridColumn>
+				<s:GridColumn dataField="complemento" headerText="Complemento"></s:GridColumn>
+				<s:GridColumn dataField="cep" headerText="CEP"></s:GridColumn>
+				<s:GridColumn dataField="cidade.nome" headerText="Cidade"></s:GridColumn>
+				<s:GridColumn dataField="cidade.estado.nome" headerText="Estado"></s:GridColumn>
+			</s:ArrayList>
+		</s:columns>
+	</s:DataGrid>
+	<s:Button x="564" y="252" label="Selecionar Endereço" click="selecionaEndereco(event)"/>
+</s:TitleWindow>
